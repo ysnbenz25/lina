@@ -4,23 +4,36 @@
   --font-serif: 'Amiri', serif;
   --font-cinzel: 'Cinzel', serif;
   --font-sans: 'Tajawal', 'Plus Jakarta Sans', sans-serif;
-  --color-gold: #d4af37;
-  --color-gold-light: #e5ca78;
-  --color-gold-champagne: #f3e5ab;
-  --color-gold-dark: #b89428;
+  --color-charcoal-950: #0A0A0A;
+  --color-charcoal-900: #111111;
+  --color-charcoal-800: #181818;
+  --color-charcoal-700: #242424;
+  --color-ivory: #E8E1D5;
+  --color-ivory-muted: #ACA394;
+  --color-gold: #C9A227;
+  --color-gold-light: #DFC062;
+  --color-gold-champagne: #F0E6CE;
+  --color-gold-dark: #A8831A;
 }
 
 /* Custom smooth scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #08080a;
+  background: #0A0A0A;
 }
 ::-webkit-scrollbar-thumb {
-  background: #22222a;
-  border-radius: 4px;
+  background: #1F1F1F;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #d4af37;
+  background: #C9A227;
 }
+
+/* Smooth selection */
+::selection {
+  background-color: #C9A227;
+  color: #0A0A0A;
+}
+

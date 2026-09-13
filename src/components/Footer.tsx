@@ -1,185 +1,226 @@
-import React, { useState } from 'react';
-import { Mail, Send, Check, Phone, MapPin, Clock, Truck, ShieldCheck, Heart } from 'lucide-react';
+import React from 'react';
+import { Phone, Mail, MapPin, Instagram, Facebook, Send, ShieldCheck } from 'lucide-react';
+import { WebsiteSettings } from '../types';
 
 interface FooterProps {
-  onShowToast: (title: string, message: string) => void;
-  onOpenTracking?: () => void;
+  onNavigateView: (view: 'home' | 'shop' | 'about' | 'contact' | 'tracking' | 'admin') => void;
+  onNavigateCategory: (category: string) => void;
+  settings?: WebsiteSettings;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onShowToast, onOpenTracking }) => {
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      onShowToast('تم الاشتراك بنجاح!', 'تم إرسال كود الخصم 15% (LINA15) إلى بريدك بنجاح.');
-      setEmail('');
-    }
-  };
+export const Footer: React.FC<FooterProps> = ({
+  onNavigateView,
+  onNavigateCategory,
+  settings,
+}) => {
+  const storePhone = settings?.storePhone || '+216 55 123 456';
+  const storeEmail = settings?.storeEmail || 'contact@linashop.tn';
+  const storeAddress = settings?.storeAddress || 'تونس، شارع الحبيب بورقيبة';
 
   return (
-    <footer id="contact" className="bg-[#050507] border-t border-white/10 pt-16 pb-12 relative overflow-hidden">
-      {/* Ambient background light */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#d4af37]/3 rounded-full blur-[140px] pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <footer id="footer" className="bg-[#0A0A0A] text-[#E8E1D5] border-t border-white/10 pt-20 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Newsletter Section */}
-        <div id="newsletter-card" className="rounded-3xl bg-gradient-to-r from-[#0c0c11] via-[#14141c] to-[#0c0c11] border border-[#d4af37]/30 p-8 sm:p-12 mb-16 text-center relative overflow-hidden shadow-2xl">
-          <div className="max-w-xl mx-auto space-y-4">
-            <span className="text-xs tracking-[0.25em] text-[#d4af37] font-serif uppercase font-bold">
-              CLUB PRIVÉ • ÉDITION LIMITÉE
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-bold font-serif text-white">
-              انضم إلى نادي لينا للنخبة العطرية
-            </h3>
-            <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">
-              اشترك في نشرتنا البريدية الحصرية لتصلك عينات النيش الجديدة فور وصولها، مع خصم خاص <span className="text-[#d4af37] font-bold">15%</span> على طلبك الأول.
-            </p>
-
-            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 pt-2">
-              <input
-                type="email"
-                id="footer-email-input"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="أدخل بريدك الإلكتروني هنا..."
-                className="w-full px-5 py-3.5 rounded-xl bg-[#08080a] border border-white/15 text-white placeholder-neutral-500 text-xs sm:text-sm focus:outline-none focus:border-[#d4af37] text-right"
-              />
-              <button
-                type="submit"
-                id="footer-subscribe-btn"
-                className="px-8 py-3.5 bg-gradient-to-r from-[#d4af37] to-[#b89428] hover:from-[#e5ca78] hover:to-[#d4af37] text-[#070709] font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md shadow-[#d4af37]/20 shrink-0 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-              >
-                <span>انضمام للنادي</span>
-                <Send className="w-4 h-4 rotate-180" />
-              </button>
-            </form>
-
-            {subscribed && (
-              <p className="text-xs text-emerald-400 pt-2 font-medium flex items-center justify-center gap-1.5">
-                <Check className="w-4 h-4" />
-                <span>شكراً لانضمامك! تم تفعيل كود الخصم الحصري (LINA15) بنجاح.</span>
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* 4-Column Footer Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 pb-12 border-b border-white/5 text-right">
+        {/* Main 4-Column Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8 pb-16 border-b border-white/5">
           
-          {/* Brand & Identity Column (5 Cols) */}
-          <div className="lg:col-span-4 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full border border-[#d4af37]/50 flex items-center justify-center bg-[#101015] text-[#d4af37] font-serif text-xl font-bold">
-                L
-              </div>
-              <div className="flex flex-col">
-                <span className="font-serif text-xl font-bold tracking-[0.18em] text-white uppercase">
-                  Lina Shop
+          {/* Column 1: Brand & Philosophy (2 spans on desktop) */}
+          <div className="lg:col-span-2 text-right space-y-5">
+            <div className="flex flex-col text-right">
+              <div className="flex items-center gap-2">
+                <span className="font-serif text-2xl font-bold tracking-[0.22em] text-[#E8E1D5] uppercase">
+                  LINA SHOP
                 </span>
-                <span className="text-[10px] tracking-[0.25em] text-[#d4af37] font-serif -mt-0.5">
-                  HAUTE PARFUMERIE
-                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C9A227]" />
               </div>
+              <span className="text-[9px] tracking-[0.35em] text-[#C9A227] font-serif uppercase mt-0.5">
+                HAUTE PARFUMERIE
+              </span>
             </div>
 
-            <p className="text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-sm font-sans">
-              دار عطور تونسية راقية متخصصة في ابتكار وتوفير أندر عطور النيش والروائح الشرقية والفرنسية الملكية، بأعلى درجات النقاء والثبات مع التوصيل لكافة ولايات الجمهورية الـ 24.
+            <p className="text-xs text-[#ACA394] leading-relaxed font-sans font-light max-w-sm">
+              دار عطور تونسية فاخرة تُعنى بابتكار وتوفير أرقى التوليفات العطرية المستوحاة من سحر الشرق وعراقة العطور العالمية. حضور ملكي يدوم في كل تفاصيلك.
             </p>
 
-            <div className="pt-2 flex items-center gap-2 text-xs text-[#d4af37]">
-              <ShieldCheck className="w-4 h-4" />
-              <span>عطور أصلية 100% مع ضمان التجربة الذهبي</span>
+            <div className="pt-2 flex items-center gap-3">
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-8 h-8 rounded-full bg-[#141414] border border-white/10 hover:border-[#C9A227] hover:text-[#C9A227] flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-8 h-8 rounded-full bg-[#141414] border border-white/10 hover:border-[#C9A227] hover:text-[#C9A227] flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Facebook"
+              >
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a
+                href={`https://wa.me/21655123456`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-8 h-8 rounded-full bg-[#141414] border border-white/10 hover:border-[#C9A227] hover:text-[#C9A227] flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="WhatsApp"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </a>
             </div>
           </div>
 
-          {/* Quick Navigation Links (2 Cols) */}
-          <div className="lg:col-span-2 space-y-3">
-            <h4 className="text-xs font-bold text-white font-serif tracking-widest uppercase text-[#d4af37]">
-              روابط المتجر
-            </h4>
-            <ul className="space-y-2 text-xs text-neutral-400">
-              <li><a href="#hero" className="hover:text-[#d4af37] transition-colors">الرئيسية</a></li>
-              <li><a href="#products" className="hover:text-[#d4af37] transition-colors">كافة العطور</a></li>
-              <li><a href="#categories" className="hover:text-[#d4af37] transition-colors">تصنيفات العطور</a></li>
-              <li><a href="#elite-collection" className="hover:text-[#d4af37] transition-colors">مجموعة النخبة</a></li>
+          {/* Column 2: Navigation & Collections */}
+          <div className="text-right space-y-4">
+            <span className="text-xs font-serif font-bold text-[#E8E1D5] uppercase tracking-wider block">
+              الأقسام والمجموعات
+            </span>
+            <ul className="space-y-2.5 text-xs text-[#ACA394] font-serif">
               <li>
                 <button
-                  type="button"
-                  onClick={onOpenTracking}
-                  className="hover:text-[#d4af37] transition-colors cursor-pointer text-right"
+                  onClick={() => {
+                    onNavigateCategory('الكل');
+                    onNavigateView('shop');
+                  }}
+                  className="hover:text-[#C9A227] transition-colors"
                 >
-                  تتبع حالة الشحنة
+                  جميع العطور
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    onNavigateCategory('عطور نسائية');
+                    onNavigateView('shop');
+                  }}
+                  className="hover:text-[#C9A227] transition-colors"
+                >
+                  عطور نسائية
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    onNavigateCategory('عطور رجالية');
+                    onNavigateView('shop');
+                  }}
+                  className="hover:text-[#C9A227] transition-colors"
+                >
+                  عطور رجالية
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    onNavigateCategory('عطور فاخرة');
+                    onNavigateView('shop');
+                  }}
+                  className="hover:text-[#C9A227] transition-colors"
+                >
+                  العطور الفاخرة (Niche)
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    onNavigateCategory('عروض خاصة');
+                    onNavigateView('shop');
+                  }}
+                  className="hover:text-[#C9A227] transition-colors text-[#C9A227]"
+                >
+                  العروض والتخفيضات
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Customer Service & Delivery Info (3 Cols) */}
-          <div className="lg:col-span-3 space-y-3">
-            <h4 className="text-xs font-bold text-white font-serif tracking-widest uppercase text-[#d4af37]">
-              خدمة الحرفاء والتوصيل
-            </h4>
-            <ul className="space-y-2 text-xs text-neutral-400">
-              <li className="flex items-start gap-2">
-                <Truck className="w-3.5 h-3.5 text-[#d4af37] shrink-0 mt-0.5" />
-                <span>شحن وتوصيل 24 - 48 ساعة لكافة الـ 24 ولاية</span>
+          {/* Column 3: Customer Service & Guarantees */}
+          <div className="text-right space-y-4">
+            <span className="text-xs font-serif font-bold text-[#E8E1D5] uppercase tracking-wider block">
+              خدمة العملاء
+            </span>
+            <ul className="space-y-2.5 text-xs text-[#ACA394] font-serif">
+              <li>
+                <button
+                  onClick={() => onNavigateView('tracking')}
+                  className="hover:text-[#C9A227] transition-colors"
+                >
+                  تتبع حالة طلبيتك
+                </button>
               </li>
-              <li className="flex items-start gap-2">
-                <Clock className="w-3.5 h-3.5 text-[#d4af37] shrink-0 mt-0.5" />
-                <span>شحن مجاني للطلبات بقيمة 150 د.ت فما فوق</span>
+              <li>
+                <button
+                  onClick={() => onNavigateView('about')}
+                  className="hover:text-[#C9A227] transition-colors"
+                >
+                  عن دار لينا شوب
+                </button>
               </li>
-              <li><a href="#faq" className="hover:text-[#d4af37] transition-colors">الأسئلة الشائعة (FAQ)</a></li>
-              <li><a href="#why-lina" className="hover:text-[#d4af37] transition-colors">الضمان الذهبي وإرجاع الطلبات</a></li>
-              <li><a href="#reviews" className="hover:text-[#d4af37] transition-colors">آراء وتجارب الحرفاء</a></li>
+              <li>
+                <button
+                  onClick={() => onNavigateView('contact')}
+                  className="hover:text-[#C9A227] transition-colors"
+                >
+                  تواصل معنا
+                </button>
+              </li>
+              <li>
+                <a href="#faq" className="hover:text-[#C9A227] transition-colors">
+                  الأسئلة الشائعة
+                </a>
+              </li>
+              <li>
+                <button
+                  onClick={() => onNavigateView('admin')}
+                  className="hover:text-[#C9A227] transition-colors text-neutral-500 hover:text-white text-[11px]"
+                >
+                  بوابة المشرف
+                </button>
+              </li>
             </ul>
           </div>
 
-          {/* Contact Info Tunisia (3 Cols) */}
-          <div className="lg:col-span-3 space-y-3">
-            <h4 className="text-xs font-bold text-white font-serif tracking-widest uppercase text-[#d4af37]">
-              تواصل معنا في تونس
-            </h4>
-            <div className="space-y-2 text-xs text-neutral-400">
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-[#d4af37] shrink-0 mt-0.5" />
-                <span>تونس العاصمة، الجمهورية التونسية (توصيل لكامل تراب الجمهورية)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#d4af37] shrink-0" />
-                <span dir="ltr" className="font-mono text-neutral-300">+216 98 123 456 / +216 71 234 567</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#d4af37] shrink-0" />
-                <span className="font-mono">contact@linashop.tn</span>
-              </div>
-              <div className="pt-2">
-                <span className="text-[11px] text-neutral-400 block mb-1.5">طرق الخلاص بتونس:</span>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="px-2 py-0.5 rounded bg-[#101015] border border-[#d4af37]/30 text-[#d4af37] text-[10px]">
-                    الدفع عند الاستلام (COD)
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-[#101015] border border-white/10 text-neutral-300 text-[10px]">
-                    تطبيق D17
-                  </span>
-                </div>
-              </div>
-            </div>
+          {/* Column 4: Contact Info in Tunisia */}
+          <div className="text-right space-y-4">
+            <span className="text-xs font-serif font-bold text-[#E8E1D5] uppercase tracking-wider block">
+              اتصل بنا في تونس
+            </span>
+            <ul className="space-y-3 text-xs text-[#ACA394] font-serif">
+              <li className="flex items-center justify-end gap-2">
+                <span>{storePhone}</span>
+                <Phone className="w-3.5 h-3.5 text-[#C9A227]" />
+              </li>
+              <li className="flex items-center justify-end gap-2">
+                <span>{storeEmail}</span>
+                <Mail className="w-3.5 h-3.5 text-[#C9A227]" />
+              </li>
+              <li className="flex items-center justify-end gap-2">
+                <span>{storeAddress}</span>
+                <MapPin className="w-3.5 h-3.5 text-[#C9A227]" />
+              </li>
+              <li className="pt-2">
+                <span className="text-[10px] text-[#C9A227] font-serif uppercase block">
+                  التوصيل السريع
+                </span>
+                <span className="text-xs text-[#E8E1D5]">24 إلى 48 ساعة لكامل ولايات تونس</span>
+              </li>
+            </ul>
           </div>
 
         </div>
 
-        {/* Bottom Bar: Copyright & Location */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-400 gap-4">
-          <p>© {new Date().getFullYear()} Lina Shop Tunisia. دار لينا للعطور الفاخرة - جميع الحقوق محفوظة.</p>
-          <div className="flex items-center gap-4 text-xs">
-            <span>توصيل لكافة ولايات تونس الـ 24 🇹🇳</span>
-            <span className="text-neutral-600">•</span>
-            <span>Haute Parfumerie Tunisienne</span>
+        {/* Bottom Bar: Copyright & Payment Badges */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500 font-serif">
+          <p>© {new Date().getFullYear()} LINA SHOP • HAUTE PARFUMERIE. جميع الحقوق محفوظة في الجمهورية التونسية.</p>
+          <div className="flex items-center gap-4 text-[11px] text-[#ACA394]">
+            <span>الدفع عند الاستلام (COD)</span>
+            <span>•</span>
+            <span>البريد التونسي D17</span>
+            <span>•</span>
+            <span>عطور أصلية 100%</span>
           </div>
         </div>
 

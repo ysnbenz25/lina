@@ -21,6 +21,12 @@ export interface Perfume {
   gender?: 'women' | 'men' | 'unisex';
   isSpecialOffer?: boolean;
   isFeatured?: boolean;
+  isBestseller?: boolean;
+  isNew?: boolean;
+  isActive?: boolean;
+  stock?: number;
+  sku?: string;
+  slug?: string;
   description: string;
   notes: PerfumeNote;
   inStock?: boolean;
@@ -34,7 +40,16 @@ export interface CartItem extends Perfume {
 
 export type PaymentMethod = 'cod' | 'd17';
 
-export type OrderStatus = 'pending_verification' | 'processing' | 'shipped' | 'delivered';
+export type OrderStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'preparing'
+  | 'shipped'
+  | 'out_for_delivery'
+  | 'delivered'
+  | 'cancelled'
+  | 'pending_verification'
+  | 'processing';
 
 export const TUNISIA_GOVERNORATES = [
   "أريانة (Ariana)",
@@ -76,6 +91,8 @@ export interface Order {
   items: CartItem[];
   subtotal: number;
   shippingFee: number;
+  discount?: number;
+  couponCode?: string;
   total: number;
   status: OrderStatus;
   paymentMethod: PaymentMethod;
@@ -84,3 +101,86 @@ export interface Order {
   orderNotes?: string;
   createdAt: string;
 }
+
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  governorate: string;
+  ordersCount: number;
+  totalSpent: number;
+  lastOrderDate: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  arabicName: string;
+  slug: string;
+  description: string;
+  image: string;
+  active: boolean;
+  productCount?: number;
+}
+
+export interface HomepageSettings {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroDescription: string;
+  heroImage: string;
+  heroBadge: string;
+  heroPrimaryBtnText: string;
+  heroSecondaryBtnText: string;
+  brandStatement: string;
+  sections: {
+    hero: boolean;
+    brandStatement: boolean;
+    featuredCollection: boolean;
+    bestSellers: boolean;
+    featuredProduct: boolean;
+    linaCollection: boolean;
+    whyLina: boolean;
+    testimonials: boolean;
+    faq: boolean;
+  };
+}
+
+export interface WebsiteSettings {
+  storeName: string;
+  subtitle: string;
+  phone: string;
+  email: string;
+  whatsapp: string;
+  instagram: string;
+  facebook: string;
+  tiktok: string;
+  address: string;
+  currency: string;
+  currencySymbol: string;
+  shippingPrice: number;
+  freeShippingThreshold: number;
+  deliveryInfo: string;
+  returnPolicy: string;
+  privacyPolicy: string;
+  terms: string;
+}
+
+export interface ThemeSettings {
+  primaryColor: string;
+  accentColor: string;
+  backgroundColor: string;
+  textColor: string;
+}
+
+export interface PromotionCoupon {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  minOrder: number;
+  expiresAt: string;
+  active: boolean;
+  usageCount: number;
+}
+

@@ -1,78 +1,91 @@
 import React from 'react';
-import { Star, CheckCircle2, Quote, MapPin } from 'lucide-react';
-import { TUNISIAN_REVIEWS } from '../data/testimonials';
+import { Star, CheckCircle2, Quote } from 'lucide-react';
 
 export const CustomerReviews: React.FC = () => {
-  return (
-    <section id="reviews" className="py-20 md:py-28 bg-[#0a0a0e] border-t border-white/5 relative overflow-hidden">
-      {/* Subtle ambient light */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#d4af37]/5 rounded-full blur-3xl pointer-events-none" />
+  const reviews = [
+    {
+      id: 1,
+      name: 'ياسمين بن سالم',
+      city: 'تونس العاصمة',
+      perfume: 'عود إمبريال',
+      rating: 5,
+      date: 'منذ يومين',
+      comment: 'عطر يفوق الوصف بكل صراحة! الثبات يدوم أكثر من يوم كامل على الملابس والفوحان استثنائي. تعامل محترم وتوصيل في أقل من 24 ساعة.',
+    },
+    {
+      id: 2,
+      name: 'مهدي الطرابلسي',
+      city: 'سوسة',
+      perfume: 'لينا سيغنتشر',
+      rating: 5,
+      date: 'منذ أسبوع',
+      comment: 'كنت متردد في البداية لأن الشراء أونلاين، لكن التغليف فخم جداً والعطر أصلي ورائحته نقية بدون كحول حاد. التوصيل لباب الدار والدفع عند الاستلام مريح جداً.',
+    },
+    {
+      id: 3,
+      name: 'سيرين الماجري',
+      city: 'صفاقس',
+      perfume: 'مسك روز بريميوم',
+      rating: 5,
+      date: 'منذ 5 أيام',
+      comment: 'من أرقى العطور التي جربتها في تونس. ريحة ناعمة ومميزة تسحر كل من يشمها. شكراً لينا شوب على الاحترافية والهدية المرفقة مع الطلب.',
+    },
+  ];
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+  return (
+    <section id="reviews" className="py-24 sm:py-32 bg-[#0A0A0A] border-b border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header */}
-        <div className="text-center space-y-3 mb-16">
-          <p className="text-[#d4af37] text-xs font-serif tracking-widest uppercase font-bold">
-            TÉMOIGNAGES CLIENTS • تجارب حقيقية
-          </p>
-          <h2 id="reviews-heading" className="text-3xl sm:text-4xl font-bold font-serif text-white">
-            آراء حرفائنا في تونس
+        {/* Section Header */}
+        <div className="text-center mb-16 space-y-3">
+          <span className="font-serif text-[11px] tracking-[0.35em] text-[#C9A227] uppercase block">
+            AVIS DE NOS CLIENTS
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#E8E1D5] font-bold tracking-tight">
+            ماذا يقول عملاؤنا؟
           </h2>
-          <p className="text-neutral-400 text-sm max-w-lg mx-auto leading-relaxed">
-            انطباعات وتجارب نخبة من عشاق العطور الفاخرة الذين وثقوا بدار Lina Shop في مختلف ولايات الجمهورية.
+          <p className="text-xs sm:text-sm text-[#ACA394] font-serif max-w-md mx-auto">
+            أكثر من 4,200 زبون يثقون في عطورنا في كامل الجمهورية التونسية
           </p>
         </div>
 
-        {/* Reviews Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {TUNISIAN_REVIEWS.map((rev) => (
+        {/* 3 Editorial Review Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {reviews.map((rev) => (
             <div
               key={rev.id}
-              id={`review-card-${rev.id}`}
-              className="bg-[#101014] rounded-2xl border border-white/10 hover:border-[#d4af37]/40 p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:shadow-[#d4af37]/5 relative group"
+              className="p-8 bg-[#111111] border border-white/5 hover:border-[#C9A227]/30 transition-all duration-300 flex flex-col justify-between text-right relative"
             >
+              <Quote className="w-8 h-8 text-white/5 absolute top-6 left-6" />
+
               <div className="space-y-4">
-                {/* Quote icon & Rating */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-[#d4af37]">
-                    {[...Array(rev.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-[#d4af37]" />
-                    ))}
-                  </div>
-                  <Quote className="w-6 h-6 text-[#d4af37]/20 group-hover:text-[#d4af37]/40 transition-colors" />
+                {/* 5 Stars */}
+                <div className="flex items-center gap-1 text-[#C9A227]">
+                  {[...Array(rev.rating)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                  ))}
                 </div>
 
-                {/* Comment */}
-                <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed text-right font-sans">
+                <p className="text-xs sm:text-sm text-[#E8E1D5] leading-relaxed font-serif font-light">
                   "{rev.comment}"
                 </p>
               </div>
 
-              {/* Author Info */}
-              <div className="pt-5 mt-5 border-t border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-3 text-right">
-                  <img
-                    src={rev.avatar}
-                    alt={rev.name}
-                    className="w-10 h-10 rounded-full object-cover border border-[#d4af37]/30"
-                  />
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="text-sm font-bold text-white font-serif">{rev.name}</h4>
-                      {rev.verified && (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#d4af37]" title="طلب مؤكد بتونس" />
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 text-[11px] text-neutral-400">
-                      <MapPin className="w-3 h-3 text-[#d4af37]" />
-                      <span>{rev.city}</span>
-                    </div>
+              {/* Author and verified purchase */}
+              <div className="mt-8 pt-4 border-t border-white/5 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-serif font-bold text-[#E8E1D5]">{rev.name}</span>
+                    <CheckCircle2 className="w-3 h-3 text-[#C9A227]" />
                   </div>
+                  <span className="text-[10px] text-[#ACA394] block font-sans">{rev.city} • تم التحقق</span>
                 </div>
 
-                <span className="text-[10px] text-neutral-500">{rev.date}</span>
+                <div className="text-left">
+                  <span className="text-[10px] font-serif text-[#C9A227] block">{rev.perfume}</span>
+                  <span className="text-[9px] text-neutral-500 font-sans">{rev.date}</span>
+                </div>
               </div>
-
             </div>
           ))}
         </div>

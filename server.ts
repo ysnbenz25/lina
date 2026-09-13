@@ -302,6 +302,134 @@ let d17Settings = {
   instructions: 'يرجى فتح تطبيق D17 التابع للبريد التونسي، واختيار "تحويل أموال"، ثم إدخال رقم الهاتف وإتمام المعاملة، ونسخ رقم العملية هنا.'
 };
 
+// In-Memory persistent store for products (seeded with authentic perfumes)
+let serverProducts = [...PERFUMES_DATA];
+
+// Categories Store
+let serverCategories = [
+  {
+    id: 'cat-1',
+    name: "Women's Fragrances",
+    arabicName: "عطور نسائية",
+    slug: 'women',
+    description: 'توليفات أنثوية راقية من أريج الورد والياسمين وزهر البرتقال',
+    image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80',
+    active: true,
+  },
+  {
+    id: 'cat-2',
+    name: "Men's Fragrances",
+    arabicName: "عطور رجالية",
+    slug: 'men',
+    description: 'روائح خشبية وجلدية وأمبرية ذات حضور حاسم وهيبة لا تضاهى',
+    image: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=800&q=80',
+    active: true,
+  },
+  {
+    id: 'cat-3',
+    name: "Unisex Fragrances",
+    arabicName: "عطور للجنسين",
+    slug: 'unisex',
+    description: 'نقاء المسك والنيرولي التونسي الفاخر في توازن استثنائي',
+    image: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=800&q=80',
+    active: true,
+  },
+  {
+    id: 'cat-4',
+    name: "Haute Parfumerie",
+    arabicName: "العطور الفاخرة",
+    slug: 'niche',
+    description: 'إصدارات نيش ملكية بمستخلصات معتقة وثبات أسطوري',
+    image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=800&q=80',
+    active: true,
+  },
+  {
+    id: 'cat-5',
+    name: "Exclusive Offers",
+    arabicName: "العروض الخاصة",
+    slug: 'offers',
+    description: 'باقات وتخفيضات موسمية حصرية للعملاء في تونس',
+    image: 'https://images.unsplash.com/photo-1583445013765-46c20c4a6772?auto=format&fit=crop&w=800&q=80',
+    active: true,
+  }
+];
+
+// Homepage CMS settings (editable by admin)
+let serverHomepageSettings = {
+  heroTitle: "عطرك... بصمتك",
+  heroSubtitle: "فخامة تُرى قبل أن تُشم",
+  heroDescription: "إبداعات عطرية تونسية بمستخلصات نيش فاخرة وأصالة تأسر الحواس.",
+  heroImage: "https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=1200&q=85",
+  heroBadge: "LINA SIGNATURE • EAU DE PARFUM • 100 ML",
+  heroPrimaryBtnText: "اكتشف العطور",
+  heroSecondaryBtnText: "تسوق الآن",
+  brandStatement: "العطر ليس مجرد رائحة. إنه حضور.",
+  sections: {
+    hero: true,
+    brandStatement: true,
+    featuredCollection: true,
+    bestSellers: true,
+    featuredProduct: true,
+    linaCollection: true,
+    whyLina: true,
+    testimonials: true,
+    faq: true,
+  }
+};
+
+// Website & Shipping settings (editable by admin)
+let serverWebsiteSettings = {
+  storeName: "LINA SHOP",
+  subtitle: "HAUTE PARFUMERIE",
+  phone: "+216 55 889 900",
+  email: "contact@linashop.tn",
+  whatsapp: "+216 55 889 900",
+  instagram: "https://instagram.com/linashop.tn",
+  facebook: "https://facebook.com/linashop.tn",
+  tiktok: "https://tiktok.com/@linashop.tn",
+  address: "شارع الحبيب بورقيبة، تونس العاصمة، الجمهورية التونسية",
+  currency: "TND",
+  currencySymbol: "د.ت",
+  shippingPrice: 7,
+  freeShippingThreshold: 150,
+  deliveryInfo: "توصيل سريع وسري ومؤمن إلى كافة معتمديات وقرى ولايات تونس الـ 24 خلال 24-48 ساعة عمل",
+  returnPolicy: "ضمان الاستبدال أو الإرجاع خلال 7 أيام من تاريخ الاستلام في حال وجود أي عيب مصنعي",
+  privacyPolicy: "نحن في لينا شوب نلتزم بحماية خصوصية عملائنا ولا نشارك بيانات الاتصال مع أي طرف ثالث",
+  terms: "جميع منتجاتنا أصلية 100% ومصنعة وفق أعلى المعايير القياسية العالمية"
+};
+
+// Theme settings (editable by admin)
+let serverThemeSettings = {
+  primaryColor: "#0A0A0A",
+  accentColor: "#C9A227",
+  backgroundColor: "#0A0A0A",
+  textColor: "#E8E1D5"
+};
+
+// Promotions store
+let serverPromotions = [
+  {
+    id: 'promo-1',
+    code: 'LINA10',
+    type: 'percentage' as const,
+    value: 10,
+    minOrder: 100,
+    expiresAt: '2026-12-31',
+    active: true,
+    usageCount: 18,
+  },
+  {
+    id: 'promo-2',
+    code: 'BIENVENUE',
+    type: 'fixed' as const,
+    value: 15,
+    minOrder: 150,
+    expiresAt: '2026-12-31',
+    active: true,
+    usageCount: 29,
+  }
+];
+
 export interface ServerOrder {
   id: string;
   trackingNumber: string;
@@ -322,17 +450,133 @@ export interface ServerOrder {
   }>;
   subtotal: number;
   shippingFee: number;
+  discount?: number;
+  couponCode?: string;
   total: number;
   paymentMethod: 'cod' | 'd17';
   d17TransactionId?: string;
   d17RecipientPhone?: string;
-  status: 'pending_verification' | 'processing' | 'shipped' | 'delivered';
+  status:
+    | 'pending'
+    | 'confirmed'
+    | 'preparing'
+    | 'shipped'
+    | 'out_for_delivery'
+    | 'delivered'
+    | 'cancelled'
+    | 'pending_verification'
+    | 'processing';
   createdAt: string;
   clientIp: string;
 }
 
-// In-Memory persistent store for orders
-const serverOrders: ServerOrder[] = [];
+// In-Memory persistent store for orders (pre-seeded with realistic orders for instant visibility)
+const serverOrders: ServerOrder[] = [
+  {
+    id: 'ORD-TN-1726201',
+    trackingNumber: 'TN-849102',
+    customerName: 'مريم الطرابلسي',
+    phone: '21650123456',
+    city: 'سوسة (Sousse)',
+    delegation: 'سوسة المدينة',
+    address: 'شارع الحبيب ثامر، عمارة الأندلس، شقة 4',
+    orderNotes: 'يرجى الاتصال قبل الوصول بنصف ساعة',
+    items: [
+      {
+        id: 1,
+        name: 'Lina Royal Musk',
+        arabicName: 'مسك لينا الملكي',
+        price: 175,
+        quantity: 1,
+        image: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=800&q=80',
+        volume: '100 ml - Extrait de Parfum'
+      }
+    ],
+    subtotal: 175,
+    shippingFee: 0,
+    discount: 0,
+    total: 175,
+    paymentMethod: 'cod',
+    status: 'delivered',
+    createdAt: '2026-09-10',
+    clientIp: '197.14.12.8'
+  },
+  {
+    id: 'ORD-TN-1726202',
+    trackingNumber: 'TN-391482',
+    customerName: 'أنيس بن سالم',
+    phone: '21698765432',
+    city: 'تونس (Tunis)',
+    delegation: 'المرسى',
+    address: 'حي النسيم، نهج الورد، رقم 12',
+    items: [
+      {
+        id: 2,
+        name: 'Imperial Oud Noir',
+        arabicName: 'عود إمبريال نوار',
+        price: 280,
+        quantity: 1,
+        image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=800&q=80',
+        volume: '100 ml - Extrait de Parfum'
+      }
+    ],
+    subtotal: 280,
+    shippingFee: 0,
+    discount: 0,
+    total: 280,
+    paymentMethod: 'd17',
+    d17TransactionId: 'D17-94827104',
+    status: 'shipped',
+    createdAt: '2026-09-12',
+    clientIp: '196.203.44.19'
+  },
+  {
+    id: 'ORD-TN-1726203',
+    trackingNumber: 'TN-629401',
+    customerName: 'سيرين المحمودي',
+    phone: '21622334455',
+    city: 'صفاقس (Sfax)',
+    delegation: 'طريق تونس',
+    address: 'كم 4، إقامة الياسمين',
+    items: [
+      {
+        id: 3,
+        name: 'Velvet Rose & Tonka',
+        arabicName: 'مخمل الورد والتونكا',
+        price: 215,
+        quantity: 1,
+        image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80',
+        volume: '100 ml - Eau de Parfum'
+      }
+    ],
+    subtotal: 215,
+    shippingFee: 0,
+    discount: 0,
+    total: 215,
+    paymentMethod: 'cod',
+    status: 'confirmed',
+    createdAt: '2026-09-13',
+    clientIp: '197.3.28.102'
+  }
+];
+
+// Helper: Check Admin Authorization
+function checkAdminAuth(req: Request): boolean {
+  const token = req.headers['x-admin-token'];
+  const password = req.body?.adminPassword || req.headers['x-admin-password'];
+  return token === 'admin_authenticated_session_token' || password === 'admin123';
+}
+
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!checkAdminAuth(req)) {
+    return res.status(401).json({
+      success: false,
+      error: 'UNAUTHORIZED',
+      message: 'غير مصرح: يرجى تسجيل الدخول كمسؤول للنظام.'
+    });
+  }
+  next();
+}
 
 // =========================================================================
 // 6. API ENDPOINTS
@@ -403,8 +647,8 @@ app.post(
     const validatedItems: ServerOrder['items'] = [];
 
     for (const orderItem of data.items) {
-      // Look up authentic product from server catalog
-      const catalogItem = PERFUMES_DATA.find((p) => p.id === orderItem.id);
+      // Look up authentic product from server catalog (or fallback)
+      const catalogItem = serverProducts.find((p) => p.id === orderItem.id) || PERFUMES_DATA.find((p) => p.id === orderItem.id);
       if (!catalogItem) {
         return res.status(400).json({
           success: false,
@@ -428,8 +672,10 @@ app.post(
       });
     }
 
-    // Shipping rules: Free shipping for orders >= 150 TND, else 7 TND
-    const shippingFee = calculatedSubtotal >= 150 ? 0 : 7;
+    // Dynamic Shipping rules from admin settings: Free shipping for orders >= freeShippingThreshold, else shippingPrice
+    const threshold = serverWebsiteSettings.freeShippingThreshold || 150;
+    const standardShippingFee = serverWebsiteSettings.shippingPrice !== undefined ? serverWebsiteSettings.shippingPrice : 7;
+    const shippingFee = calculatedSubtotal >= threshold ? 0 : standardShippingFee;
     const calculatedTotal = calculatedSubtotal + shippingFee;
 
     // 3. Status Assignment:
@@ -489,9 +735,309 @@ app.post(
   }
 );
 
+// Admin Login Endpoint
+app.post('/api/admin/login', generalRateLimiter, (req: Request, res: Response) => {
+  const { password } = req.body;
+  if (password === 'admin123') {
+    return res.json({
+      success: true,
+      token: 'admin_authenticated_session_token',
+      message: 'تم تسجيل الدخول بنجاح كمسؤول لمتجر لينا شوب'
+    });
+  }
+  return res.status(401).json({
+    success: false,
+    message: 'كلمة المرور غير صحيحة. يرجى التحقق وإعادة المحاولة.'
+  });
+});
+
+// ==========================================
+// PRODUCTS ENDPOINTS
+// ==========================================
+
+// GET /api/products (Public)
+app.get('/api/products', generalRateLimiter, (_req: Request, res: Response) => {
+  res.json({
+    success: true,
+    count: serverProducts.length,
+    products: serverProducts
+  });
+});
+
+// POST /api/products (Admin Create)
+app.post('/api/products', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  const productData = req.body;
+  const newId = serverProducts.length > 0 ? Math.max(...serverProducts.map(p => p.id)) + 1 : 1;
+  const newProduct = {
+    id: newId,
+    name: sanitizeText(productData.name || 'New Perfume'),
+    arabicName: sanitizeText(productData.arabicName || 'عطر جديد'),
+    badge: sanitizeText(productData.badge || 'إصدار فاخر'),
+    category: sanitizeText(productData.category || 'عطور فاخرة'),
+    price: Number(productData.price) || 150,
+    originalPrice: Number(productData.originalPrice) || Number(productData.price) + 40,
+    volume: sanitizeText(productData.volume || '100 ml - Extrait de Parfum'),
+    rating: Number(productData.rating) || 5.0,
+    reviewsCount: Number(productData.reviewsCount) || 1,
+    image: productData.image || 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=800&q=80',
+    gallery: Array.isArray(productData.gallery) ? productData.gallery : [productData.image],
+    sizes: Array.isArray(productData.sizes) ? productData.sizes : ['50 ml', '100 ml'],
+    gender: productData.gender || 'unisex',
+    isSpecialOffer: Boolean(productData.isSpecialOffer),
+    isFeatured: Boolean(productData.isFeatured),
+    isBestseller: Boolean(productData.isBestseller),
+    isNew: Boolean(productData.isNew),
+    isActive: productData.isActive !== false,
+    stock: Number(productData.stock) || 25,
+    sku: sanitizeText(productData.sku || `LINA-${newId}`),
+    description: sanitizeText(productData.description || ''),
+    notes: {
+      top: sanitizeText(productData.notes?.top || ''),
+      heart: sanitizeText(productData.notes?.heart || ''),
+      base: sanitizeText(productData.notes?.base || '')
+    },
+    inStock: productData.inStock !== false
+  };
+
+  serverProducts.push(newProduct);
+  res.status(201).json({ success: true, product: newProduct, message: 'تم إضافة العطر بنجاح' });
+});
+
+// PUT /api/products/:id (Admin Update)
+app.put('/api/products/:id', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const index = serverProducts.findIndex(p => p.id === id);
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: 'العطر غير موجود' });
+  }
+
+  const updatedData = req.body;
+  serverProducts[index] = {
+    ...serverProducts[index],
+    ...updatedData,
+    id, // Keep same ID
+    notes: {
+      ...serverProducts[index].notes,
+      ...(updatedData.notes || {})
+    }
+  };
+
+  res.json({ success: true, product: serverProducts[index], message: 'تم تحديث العطر بنجاح' });
+});
+
+// DELETE /api/products/:id (Admin Delete)
+app.delete('/api/products/:id', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const index = serverProducts.findIndex(p => p.id === id);
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: 'العطر غير موجود' });
+  }
+
+  const deleted = serverProducts.splice(index, 1);
+  res.json({ success: true, product: deleted[0], message: 'تم حذف العطر بنجاح' });
+});
+
+// ==========================================
+// CATEGORIES ENDPOINTS
+// ==========================================
+
+app.get('/api/categories', generalRateLimiter, (_req: Request, res: Response) => {
+  res.json({ success: true, categories: serverCategories });
+});
+
+app.post('/api/categories', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  const { name, arabicName, slug, description, image } = req.body;
+  const newCategory = {
+    id: `cat-${Date.now()}`,
+    name: sanitizeText(name || 'Category'),
+    arabicName: sanitizeText(arabicName || 'قسم جديد'),
+    slug: sanitizeText(slug || 'category'),
+    description: sanitizeText(description || ''),
+    image: image || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80',
+    active: true
+  };
+  serverCategories.push(newCategory);
+  res.status(201).json({ success: true, category: newCategory, message: 'تم إضافة القسم بنجاح' });
+});
+
+app.put('/api/categories/:id', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  const { id } = req.params;
+  const index = serverCategories.findIndex(c => c.id === id);
+  if (index === -1) return res.status(404).json({ success: false, message: 'القسم غير موجود' });
+
+  serverCategories[index] = { ...serverCategories[index], ...req.body, id };
+  res.json({ success: true, category: serverCategories[index], message: 'تم تحديث القسم بنجاح' });
+});
+
+app.delete('/api/categories/:id', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  const { id } = req.params;
+  const index = serverCategories.findIndex(c => c.id === id);
+  if (index === -1) return res.status(404).json({ success: false, message: 'القسم غير موجود' });
+
+  serverCategories.splice(index, 1);
+  res.json({ success: true, message: 'تم حذف القسم بنجاح' });
+});
+
+// ==========================================
+// HOMEPAGE CMS SETTINGS
+// ==========================================
+
+app.get('/api/settings/homepage', generalRateLimiter, (_req: Request, res: Response) => {
+  res.json({ success: true, settings: serverHomepageSettings });
+});
+
+app.put('/api/settings/homepage', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  serverHomepageSettings = {
+    ...serverHomepageSettings,
+    ...req.body,
+    sections: {
+      ...serverHomepageSettings.sections,
+      ...(req.body.sections || {})
+    }
+  };
+  res.json({ success: true, settings: serverHomepageSettings, message: 'تم حفظ إعدادات الصفحة الرئيسية بنجاح' });
+});
+
+// ==========================================
+// WEBSITE SETTINGS & SHIPPING
+// ==========================================
+
+app.get('/api/settings/website', generalRateLimiter, (_req: Request, res: Response) => {
+  res.json({ success: true, settings: serverWebsiteSettings });
+});
+
+app.put('/api/settings/website', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  serverWebsiteSettings = { ...serverWebsiteSettings, ...req.body };
+  res.json({ success: true, settings: serverWebsiteSettings, message: 'تم تحديث إعدادات المتجر والشحن بنجاح' });
+});
+
+// ==========================================
+// THEME SETTINGS
+// ==========================================
+
+app.get('/api/settings/theme', generalRateLimiter, (_req: Request, res: Response) => {
+  res.json({ success: true, settings: serverThemeSettings });
+});
+
+app.put('/api/settings/theme', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  serverThemeSettings = { ...serverThemeSettings, ...req.body };
+  res.json({ success: true, settings: serverThemeSettings, message: 'تم تحديث إعدادات المظهر بنجاح' });
+});
+
+// ==========================================
+// PROMOTIONS & COUPONS
+// ==========================================
+
+app.get('/api/promotions', generalRateLimiter, requireAdmin, (_req: Request, res: Response) => {
+  res.json({ success: true, promotions: serverPromotions });
+});
+
+app.post('/api/promotions', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  const { code, type, value, minOrder, expiresAt } = req.body;
+  const newPromo = {
+    id: `promo-${Date.now()}`,
+    code: sanitizeText(code || '').toUpperCase(),
+    type: type === 'fixed' ? 'fixed' as const : 'percentage' as const,
+    value: Number(value) || 10,
+    minOrder: Number(minOrder) || 0,
+    expiresAt: expiresAt || '2026-12-31',
+    active: true,
+    usageCount: 0
+  };
+  serverPromotions.push(newPromo);
+  res.status(201).json({ success: true, promotion: newPromo, message: 'تم إضافة كود الخصم بنجاح' });
+});
+
+app.delete('/api/promotions/:id', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  const { id } = req.params;
+  const index = serverPromotions.findIndex(p => p.id === id || p.code === id.toUpperCase());
+  if (index === -1) return res.status(404).json({ success: false, message: 'كود الخصم غير موجود' });
+
+  serverPromotions.splice(index, 1);
+  res.json({ success: true, message: 'تم حذف كود الخصم بنجاح' });
+});
+
+// Validate coupon at checkout (Public)
+app.post('/api/promotions/validate', generalRateLimiter, (req: Request, res: Response) => {
+  const { code, subtotal } = req.body;
+  if (!code || typeof code !== 'string') {
+    return res.status(400).json({ success: false, message: 'يرجى إدخال رمز الخصم' });
+  }
+
+  const promo = serverPromotions.find(p => p.code === code.trim().toUpperCase() && p.active);
+  if (!promo) {
+    return res.status(404).json({ success: false, message: 'رمز الخصم غير صالح أو منتهي الصلاحية' });
+  }
+
+  const orderAmount = Number(subtotal) || 0;
+  if (orderAmount < promo.minOrder) {
+    return res.status(400).json({
+      success: false,
+      message: `الحد الأدنى للطلب لتفعيل هذا الخصم هو ${promo.minOrder} د.ت`
+    });
+  }
+
+  let discountAmount = 0;
+  if (promo.type === 'percentage') {
+    discountAmount = Math.round((orderAmount * promo.value) / 100);
+  } else {
+    discountAmount = Math.min(promo.value, orderAmount);
+  }
+
+  res.json({
+    success: true,
+    code: promo.code,
+    type: promo.type,
+    discountAmount,
+    message: `تم تطبيق كود الخصم بنجاح (-${discountAmount} د.ت)`
+  });
+});
+
+// ==========================================
+// CUSTOMERS LIST (Aggregated from Orders)
+// ==========================================
+
+app.get('/api/customers', generalRateLimiter, requireAdmin, (_req: Request, res: Response) => {
+  const customerMap = new Map<string, {
+    id: string;
+    name: string;
+    phone: string;
+    governorate: string;
+    ordersCount: number;
+    totalSpent: number;
+    lastOrderDate: string;
+  }>();
+
+  for (const order of serverOrders) {
+    const key = order.phone || order.customerName;
+    const existing = customerMap.get(key);
+    if (existing) {
+      existing.ordersCount += 1;
+      existing.totalSpent += order.total;
+      if (order.createdAt > existing.lastOrderDate) {
+        existing.lastOrderDate = order.createdAt;
+      }
+    } else {
+      customerMap.set(key, {
+        id: `cust-${customerMap.size + 1}`,
+        name: order.customerName,
+        phone: order.phone,
+        governorate: order.city,
+        ordersCount: 1,
+        totalSpent: order.total,
+        lastOrderDate: order.createdAt
+      });
+    }
+  }
+
+  res.json({
+    success: true,
+    customers: Array.from(customerMap.values())
+  });
+});
+
 // GET /api/orders (List all orders for Admin / syncing)
 app.get('/api/orders', generalRateLimiter, (req: Request, res: Response) => {
-  // Return list of orders (can be filtered)
   res.json({
     success: true,
     count: serverOrders.length,
@@ -499,16 +1045,26 @@ app.get('/api/orders', generalRateLimiter, (req: Request, res: Response) => {
   });
 });
 
-// PATCH /api/orders/:id/status (Admin verifies D17 payment or changes status)
+// PATCH /api/orders/:id/status (Admin verifies status or payment)
 app.patch('/api/orders/:id/status', generalRateLimiter, (req: Request, res: Response) => {
   const { id } = req.params;
   const { status, adminPassword } = req.body;
 
-  if (adminPassword !== 'admin123') {
+  if (adminPassword !== 'admin123' && req.headers['x-admin-token'] !== 'admin_authenticated_session_token') {
     return res.status(401).json({ success: false, message: 'غير مصرح: كلمة مرور المشرف غير صحيحة' });
   }
 
-  const validStatuses = ['pending_verification', 'processing', 'shipped', 'delivered'];
+  const validStatuses = [
+    'pending',
+    'confirmed',
+    'preparing',
+    'shipped',
+    'out_for_delivery',
+    'delivered',
+    'cancelled',
+    'pending_verification',
+    'processing'
+  ];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ success: false, message: 'حالة الطلب غير صالحة' });
   }
@@ -522,7 +1078,7 @@ app.patch('/api/orders/:id/status', generalRateLimiter, (req: Request, res: Resp
 
   res.json({
     success: true,
-    message: `تم تحديث حالة الطلب (${order.trackingNumber}) إلى ${status}`,
+    message: `تم تحديث حالة الطلب (${order.trackingNumber}) بنجاح`,
     order
   });
 });
