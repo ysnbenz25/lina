@@ -16,6 +16,11 @@ export interface Perfume {
   rating: number;
   reviewsCount: number;
   image: string;
+  gallery?: string[];
+  sizes?: string[];
+  gender?: 'women' | 'men' | 'unisex';
+  isSpecialOffer?: boolean;
+  isFeatured?: boolean;
   description: string;
   notes: PerfumeNote;
   inStock?: boolean;
@@ -24,6 +29,7 @@ export interface Perfume {
 
 export interface CartItem extends Perfume {
   quantity: number;
+  selectedSize?: string;
 }
 
 export type PaymentMethod = 'cod' | 'd17';
@@ -75,5 +81,6 @@ export interface Order {
   paymentMethod: PaymentMethod;
   d17TransactionId?: string;
   d17RecipientPhone?: string;
+  orderNotes?: string;
   createdAt: string;
 }

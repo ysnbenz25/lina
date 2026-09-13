@@ -44,19 +44,19 @@ export const AboutSection: React.FC = () => {
               نبتكر تشكيلاتنا العطرية الفاخرة وعطور النيش بالتعاون مع أرقى دور العطور العالمية، مع استخدام نوتات أصيلة مثل زهر البرتقال التونسي النقي وأخشاب العود والعنبر الفاخر، مع توفير خدمة التوصيل الاحترافية لكافة الـ 24 ولاية تونسية.
             </p>
 
-            {/* Numerical Stats */}
+            {/* Factual Value Indicators */}
             <div id="about-stats" className="grid grid-cols-3 gap-6 pt-6 border-t border-white/10">
               <div>
-                <p className="text-2xl sm:text-3xl font-bold text-[#d4af37] font-sans">+12,500</p>
-                <p className="text-xs text-neutral-400 mt-1">حريف يثق بنا في تونس</p>
-              </div>
-              <div>
                 <p className="text-2xl sm:text-3xl font-bold text-[#d4af37] font-sans">24 ولاية</p>
-                <p className="text-xs text-neutral-400 mt-1">تغطية شاملة وتوصيل سريع</p>
+                <p className="text-xs text-neutral-400 mt-1">تغطية شاملة وتوصيل لباب منزلك</p>
               </div>
               <div>
-                <p className="text-2xl sm:text-3xl font-bold text-[#d4af37] font-sans">4.9 / 5</p>
-                <p className="text-xs text-neutral-400 mt-1">نسبة رضا الحرفاء</p>
+                <p className="text-2xl sm:text-3xl font-bold text-[#d4af37] font-sans">100%</p>
+                <p className="text-xs text-neutral-400 mt-1">عطور أصلية بضمان التجربة الذهبي</p>
+              </div>
+              <div>
+                <p className="text-2xl sm:text-3xl font-bold text-[#d4af37] font-sans">24 - 48h</p>
+                <p className="text-xs text-neutral-400 mt-1">متوسط زمن الشحن والتوصيل</p>
               </div>
             </div>
 

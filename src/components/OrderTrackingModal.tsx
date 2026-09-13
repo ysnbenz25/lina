@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Search, Truck, CheckCircle2, Clock, AlertCircle, Smartphone, Banknote, ShieldAlert } from 'lucide-react';
-import { Order } from '../types';
+import { X, Search, Truck, CheckCircle2, Clock, Smartphone, Banknote, ShieldAlert, Package, MapPin, Phone, User, Calendar } from 'lucide-react';
+import { Order, OrderStatus } from '../types';
 
 interface OrderTrackingModalProps {
   isOpen: boolean;
@@ -29,283 +29,293 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanCode = searchCode.trim().toUpperCase();
-    const found = orders.find((o) => o.trackingNumber.toUpperCase() === cleanCode);
+    const cleanPhone = searchCode.trim().replace(/\s+/g, '');
+    
+    // Support search by tracking number OR customer phone number
+    const found = orders.find(
+      (o) =>
+        o.trackingNumber.toUpperCase() === cleanCode ||
+        o.phone.replace(/\s+/g, '').includes(cleanPhone)
+    );
+
     setSearchedOrder(found || null);
     setHasSearched(true);
   };
 
   const isD17 = searchedOrder?.paymentMethod === 'd17';
 
+  // Determine timeline step indexes
+  // 0: تم استلام الطلب
+  // 1: جاري التجهيز
+  // 2: تم الشحن
+  // 3: تم التوصيل
+  const getStepIndex = (status: OrderStatus): number => {
+    switch (status) {
+      case 'pending_verification':
+        return 0;
+      case 'processing':
+        return 1;
+      case 'shipped':
+        return 2;
+      case 'delivered':
+        return 3;
+      default:
+        return 0;
+    }
+  };
+
+  const currentStep = searchedOrder ? getStepIndex(searchedOrder.status) : 0;
+
+  const timelineSteps = [
+    { title: "تم استلام الطلب", desc: "تم تسجيل وتأكيد بيانات الطلب بنجاح", sub: "Confirmation reçue" },
+    { title: "جاري التجهيز", desc: "تغليف العطر الفاخر وإرفاق عينة التجربة المجانية", sub: "En préparation" },
+    { title: "تم الشحن", desc: "الشحنة مع مندوب التوصيل في طريقها لولايتك", sub: "En cours de livraison" },
+    { title: "تم التوصيل", desc: "تم تسليم الطرد واستلام المبلغ بالدينار التونسي", sub: "Colis livré avec succès" },
+  ];
+
   return (
     <div
       id="tracking-modal-backdrop"
-      className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
     >
       <div
         id="tracking-modal"
-        className="bg-[#101014] border border-[#d4af37]/40 rounded-2xl max-w-xl w-full p-5 sm:p-8 relative shadow-2xl my-auto text-right animate-in zoom-in-95 duration-200"
+        className="bg-[#0c0c11] border border-[#d4af37]/40 rounded-2xl max-w-2xl w-full p-5 sm:p-8 relative shadow-2xl my-auto text-right animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto"
       >
+        {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 left-4 p-2 text-neutral-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+          className="absolute top-4 left-4 p-2 text-neutral-400 hover:text-white rounded-full bg-[#14141c] hover:bg-[#1f1f2a] border border-white/10 transition-colors cursor-pointer"
           aria-label="إغلاق"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-[#d4af37]/20 border border-[#d4af37]/40 text-[#d4af37] flex items-center justify-center font-bold">
-            <Truck className="w-5 h-5" />
+        {/* Modal Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-xl bg-[#d4af37]/15 border border-[#d4af37]/40 text-[#d4af37] flex items-center justify-center shrink-0">
+            <Truck className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white font-serif">نظام تتبع الشحنات والدفع المباشر</h3>
-            <p className="text-xs text-neutral-400">تتبع مسار طلبك وحالة التحقق من الدفع لحظة بلحظة</p>
+            <span className="text-[11px] text-[#d4af37] font-serif uppercase tracking-widest font-bold block">
+              SUIVI DE COLIS EN TUNISIE
+            </span>
+            <h3 className="text-xl sm:text-2xl font-bold text-white font-serif">
+              تتبع الشحنة التونسية
+            </h3>
+            <p className="text-xs text-neutral-400">
+              تابع حالة تجهيز عطرك ومسار التوصيل في كافة ولايات الجمهورية
+            </p>
           </div>
         </div>
 
-        {/* Search input */}
-        <form onSubmit={handleSearch} className="flex gap-2 mb-5">
+        {/* Search form */}
+        <form onSubmit={handleSearch} className="flex gap-2 mb-6">
           <input
             type="text"
             required
             value={searchCode}
             onChange={(e) => setSearchCode(e.target.value)}
-            placeholder="أدخل كود التتبع (مثال: TN-784291)"
+            placeholder="أدخل كود التتبع (مثال: TN-784291) أو رقم الهاتف..."
             dir="ltr"
-            className="flex-1 px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/15 text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-[#d4af37] font-sans uppercase text-left transition-colors"
+            className="flex-1 px-4 py-3 rounded-xl bg-[#121218] border border-white/15 text-white placeholder-neutral-500 text-xs sm:text-sm focus:outline-none focus:border-[#d4af37] text-left transition-colors font-mono"
           />
           <button
             type="submit"
-            className="px-5 py-2.5 bg-[#d4af37] hover:bg-[#e5ca78] text-[#08080a] font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shrink-0 active:scale-95"
+            className="px-6 py-3 bg-gradient-to-r from-[#d4af37] to-[#b89428] hover:from-[#e5ca78] hover:to-[#d4af37] text-[#070709] font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer shadow-md"
           >
             <Search className="w-4 h-4" />
-            <span>بحث وتتبع</span>
+            <span>تتبع الآن</span>
           </button>
         </form>
 
-        {/* Result Container */}
+        {/* Search Result */}
         {searchedOrder ? (
-          <div className="p-4 sm:p-5 bg-[#08080a] rounded-xl border border-[#d4af37]/30 space-y-4">
-            {/* Header info */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div className="space-y-6">
+            
+            {/* Header summary card */}
+            <div className="p-4 sm:p-5 bg-[#101016] rounded-xl border border-white/10 flex flex-wrap items-center justify-between gap-4">
               <div>
-                <span className="text-[11px] text-neutral-400 block">رقم بوليصة التتبع:</span>
-                <span className="text-lg font-bold text-[#d4af37] font-sans">
+                <span className="text-xs text-neutral-400 block font-serif">رقم بوليصة التتبع:</span>
+                <span className="text-xl sm:text-2xl font-bold text-[#d4af37] font-mono tracking-wider">
                   {searchedOrder.trackingNumber}
                 </span>
               </div>
               <div className="text-left">
-                <span className="text-[11px] text-neutral-400 block">تاريخ التسجيل:</span>
-                <span className="text-xs text-white font-sans">{searchedOrder.createdAt}</span>
+                <span className="text-xs text-neutral-400 block">تاريخ التسجيل:</span>
+                <span className="text-xs font-bold text-white font-mono">{searchedOrder.createdAt}</span>
+                <span className="text-[10px] text-emerald-400 block mt-0.5 font-medium">
+                  {searchedOrder.status === 'delivered' ? '✓ تم التسليم' : 'الشحنة قيد المتابعة'}
+                </span>
               </div>
             </div>
 
-            {/* Payment Method Badge & Warning */}
-            <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-[#101014] rounded-xl border border-white/5 text-xs">
-              <div className="flex items-center gap-2">
-                {isD17 ? (
-                  <Smartphone className="w-4 h-4 text-[#d4af37]" />
-                ) : (
-                  <Banknote className="w-4 h-4 text-[#d4af37]" />
-                )}
-                <div>
-                  <span className="text-neutral-400">طريقة الدفع: </span>
-                  <strong className="text-white">
-                    {isD17 ? 'تطبيق D17 (البريد التونسي)' : 'الدفع نقداً عند الاستلام (COD)'}
-                  </strong>
-                </div>
-              </div>
-
-              {isD17 && searchedOrder.d17TransactionId && (
-                <div className="text-xs bg-[#08080a] px-2.5 py-1 rounded-lg border border-white/10 font-mono text-[#d4af37]" dir="ltr">
-                  TX: {searchedOrder.d17TransactionId}
-                </div>
-              )}
-            </div>
-
-            {/* Status Highlight Banner for D17 Pending */}
-            {searchedOrder.status === 'pending_verification' && (
-              <div className="p-3 bg-amber-950/30 border border-amber-500/40 rounded-xl flex items-start gap-2 text-xs text-amber-200">
-                <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="font-bold block text-amber-300">الطلب معلق بانتظار التحقق من التحويل:</strong>
-                  <span>
-                    تم استلام رقم العملية ({searchedOrder.d17TransactionId}). يقوم المشرف بمطابقة كشف حساب D17 وسيبدأ تجهيز شحنتك فور التأكيد.
-                  </span>
+            {/* D17 Alert if pending verification */}
+            {isD17 && searchedOrder.status === 'pending_verification' && (
+              <div className="p-4 bg-amber-950/30 border border-amber-500/40 rounded-xl flex items-start gap-3 text-xs text-amber-200">
+                <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <strong className="font-bold block text-amber-300">الطلب معلق بانتظار تأكيد تحويل D17:</strong>
+                  <p>
+                    تم استلام رقم العملية المعطى من D17 (<span className="font-mono text-white font-bold">{searchedOrder.d17TransactionId}</span>). جاري مراجعة الإشعار في حساب البريد وسينتقل طلبك لمرحلة "جاري التجهيز" فور التأكيد.
+                  </p>
                 </div>
               </div>
             )}
 
-            {/* Recipient Details */}
-            <div className="p-3 bg-[#101014] rounded-lg border border-white/5 text-xs text-neutral-300 space-y-1">
-              <p>
-                <strong className="text-white">المستلم:</strong> {searchedOrder.customerName} (
-                <span dir="ltr" className="font-mono">{searchedOrder.phone}</span>)
-              </p>
-              <p>
-                <strong className="text-white">العنوان:</strong> {searchedOrder.city} {searchedOrder.delegation ? `- ${searchedOrder.delegation}` : ''} - {searchedOrder.address}
-              </p>
-            </div>
+            {/* Progress Timeline: 4 exact steps */}
+            <div className="p-5 bg-[#101016] rounded-xl border border-[#d4af37]/25 space-y-4">
+              <h4 className="text-xs font-serif font-bold text-white tracking-wider flex items-center justify-between">
+                <span>مراحل تقدم الشحنة (Timeline):</span>
+                <span className="text-[#d4af37] font-sans text-[11px]">
+                  المرحلة {currentStep + 1} من 4
+                </span>
+              </h4>
 
-            {/* Timeline */}
-            <div className="space-y-3 pt-1">
-              <h5 className="text-xs font-bold text-white">مراحل الشحنة:</h5>
+              <div className="relative pt-2">
+                {/* Connecting Line */}
+                <div className="absolute top-6 right-6 left-6 h-0.5 bg-white/10 -z-0 hidden sm:block">
+                  <div
+                    className="h-full bg-[#d4af37] transition-all duration-500"
+                    style={{ width: `${(currentStep / 3) * 100}%` }}
+                  />
+                </div>
 
-              <div className="space-y-2.5">
-                {/* D17 Verification Step (if D17) */}
-                {isD17 && (
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
-                        searchedOrder.status === 'pending_verification'
-                          ? 'bg-amber-500 text-black animate-pulse'
-                          : 'bg-emerald-500 text-black'
-                      }`}
-                    >
-                      <Smartphone className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <h6
-                        className={`text-xs font-bold ${
-                          searchedOrder.status === 'pending_verification' ? 'text-amber-400 text-sm' : 'text-emerald-400'
+                {/* Steps */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-2 relative z-10">
+                  {timelineSteps.map((step, idx) => {
+                    const isCompleted = currentStep >= idx;
+                    const isCurrent = currentStep === idx;
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex sm:flex-col items-center sm:text-center gap-3 sm:gap-2 p-2.5 rounded-lg transition-all ${
+                          isCurrent
+                            ? 'bg-[#181822] sm:bg-transparent border sm:border-0 border-[#d4af37]/30'
+                            : ''
                         }`}
                       >
-                        {searchedOrder.status === 'pending_verification'
-                          ? '1. بانتظار تأكيد تحويل تطبيق D17'
-                          : '1. تم التحقق من تحويل D17 بنجاح'}
-                      </h6>
-                      <p className="text-[11px] text-neutral-400">
-                        {searchedOrder.status === 'pending_verification'
-                          ? 'جاري مطابقة رقم المعاملة مع البريد التونسي'
-                          : 'تم تأكيد وصول المبلغ وبدء التجهيز'}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                        {/* Circle Indicator */}
+                        <div
+                          className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-xs font-bold font-mono transition-all ${
+                            isCompleted
+                              ? 'bg-[#d4af37] text-[#070709] shadow-md shadow-[#d4af37]/30 scale-105'
+                              : 'bg-[#181822] text-neutral-500 border border-white/10'
+                          }`}
+                        >
+                          {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
+                        </div>
 
-                {/* Step: Processing */}
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
-                      searchedOrder.status === 'processing'
-                        ? 'bg-[#d4af37] text-[#08080a]'
-                        : searchedOrder.status === 'shipped' || searchedOrder.status === 'delivered'
-                        ? 'bg-emerald-500 text-black'
-                        : 'bg-[#1a1a24] text-neutral-500'
-                    }`}
-                  >
-                    <Clock className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <h6
-                      className={`text-xs font-bold ${
-                        searchedOrder.status === 'processing' ? 'text-[#d4af37] text-sm' : searchedOrder.status === 'shipped' || searchedOrder.status === 'delivered' ? 'text-white' : 'text-neutral-500'
-                      }`}
-                    >
-                      {isD17 ? '2. التجهيز والتغليف بدار لينا للعطور' : '1. قيد التجهيز في دار لينا للعطور'}
-                    </h6>
-                    <p className="text-[11px] text-neutral-400">
-                      تجهيز العطور الفاخرة والعينات المجانية وتغليف الصناديق الملكية
-                    </p>
-                  </div>
-                </div>
-
-                {/* Step: Shipped */}
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
-                      searchedOrder.status === 'shipped'
-                        ? 'bg-[#d4af37] text-[#08080a]'
-                        : searchedOrder.status === 'delivered'
-                        ? 'bg-emerald-500 text-black'
-                        : 'bg-[#1a1a24] text-neutral-500'
-                    }`}
-                  >
-                    <Truck className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <h6
-                      className={`text-xs font-bold ${
-                        searchedOrder.status === 'shipped' ? 'text-[#d4af37] text-sm' : searchedOrder.status === 'delivered' ? 'text-white' : 'text-neutral-500'
-                      }`}
-                    >
-                      {isD17 ? '3. تم الشحن للموزع' : '2. تم الشحن والتسليم للمندوب'}
-                    </h6>
-                    <p className="text-[11px] text-neutral-400">
-                      الشحنة في طريقها للتسليم إلى عنوانك في ولاية {searchedOrder.city}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Step: Delivered */}
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
-                      searchedOrder.status === 'delivered'
-                        ? 'bg-green-500 text-[#08080a]'
-                        : 'bg-[#1a1a24] text-neutral-500'
-                    }`}
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <h6
-                      className={`text-xs font-bold ${
-                        searchedOrder.status === 'delivered' ? 'text-green-400 text-sm' : 'text-neutral-500'
-                      }`}
-                    >
-                      {isD17 ? '4. تم التسليم بنجاح' : '3. تم التوصيل بنجاح'}
-                    </h6>
-                    <p className="text-[11px] text-neutral-400">
-                      تم تسليم العطر للحريف وتأكيد وصول الشحنة بسلامة تامة
-                    </p>
-                  </div>
+                        {/* Text */}
+                        <div className="text-right sm:text-center space-y-0.5">
+                          <h5
+                            className={`text-xs font-bold font-serif ${
+                              isCompleted ? 'text-white' : 'text-neutral-500'
+                            }`}
+                          >
+                            {step.title}
+                          </h5>
+                          <span className="text-[10px] text-[#d4af37]/70 block font-serif">
+                            {step.sub}
+                          </span>
+                          <p className="text-[10px] text-neutral-400 sm:line-clamp-2">
+                            {step.desc}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
-            {/* Items Summary */}
-            <div className="border-t border-white/10 pt-3 space-y-2">
-              <span className="text-xs font-bold text-white block">
-                محتويات الطلب ({searchedOrder.items.length}):
-              </span>
-              <div className="space-y-1.5 max-h-32 overflow-y-auto">
+            {/* Customer & Delivery Address Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              
+              {/* Customer Box */}
+              <div className="p-4 bg-[#101016] rounded-xl border border-white/10 space-y-2">
+                <div className="flex items-center gap-2 text-[#d4af37] font-semibold font-serif border-b border-white/5 pb-1.5">
+                  <User className="w-4 h-4" />
+                  <span>بيانات الحريف</span>
+                </div>
+                <div className="space-y-1 text-neutral-300">
+                  <p><strong className="text-white">الاسم واللقب:</strong> {searchedOrder.customerName}</p>
+                  <p><strong className="text-white">الهاتف:</strong> <span dir="ltr" className="font-mono text-neutral-200">{searchedOrder.phone}</span></p>
+                  <p>
+                    <strong className="text-white">طريقة الدفع:</strong>{' '}
+                    <span className="text-[#d4af37]">
+                      {isD17 ? 'تطبيق D17 (البريد التونسي)' : 'الدفع عند الاستلام (COD)'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Address Box */}
+              <div className="p-4 bg-[#101016] rounded-xl border border-white/10 space-y-2">
+                <div className="flex items-center gap-2 text-[#d4af37] font-semibold font-serif border-b border-white/5 pb-1.5">
+                  <MapPin className="w-4 h-4" />
+                  <span>عنوان التوصيل في تونس</span>
+                </div>
+                <div className="space-y-1 text-neutral-300">
+                  <p><strong className="text-white">الولاية:</strong> {searchedOrder.city}</p>
+                  {searchedOrder.delegation && (
+                    <p><strong className="text-white">المدينة / المعتمدية:</strong> {searchedOrder.delegation}</p>
+                  )}
+                  <p><strong className="text-white">العنوان:</strong> {searchedOrder.address}</p>
+                  {searchedOrder.orderNotes && (
+                    <p><strong className="text-white">ملاحظات:</strong> {searchedOrder.orderNotes}</p>
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Order Items Breakdown */}
+            <div className="p-4 bg-[#101016] rounded-xl border border-white/10 space-y-3 text-xs">
+              <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                <span className="font-bold text-white font-serif flex items-center gap-1.5">
+                  <Package className="w-4 h-4 text-[#d4af37]" />
+                  <span>محتويات الطرد ({searchedOrder.items.length} عطور)</span>
+                </span>
+                <span className="font-bold text-[#d4af37] font-sans text-sm">
+                  المجموع: {searchedOrder.total} د.ت
+                </span>
+              </div>
+
+              <div className="space-y-2">
                 {searchedOrder.items.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex justify-between items-center text-xs text-neutral-300 bg-[#101014] p-2 rounded-lg"
-                  >
-                    <span>
-                      {item.arabicName} × {item.quantity}
-                    </span>
-                    <span className="text-[#d4af37] font-sans font-bold">
-                      {(item.price * item.quantity).toLocaleString()} د.ت
-                    </span>
+                  <div key={idx} className="flex items-center justify-between text-neutral-300">
+                    <div className="flex items-center gap-2">
+                      <img src={item.image} alt={item.arabicName} className="w-9 h-9 rounded object-cover border border-white/10" />
+                      <div>
+                        <span className="text-white font-medium block">{item.arabicName}</span>
+                        <span className="text-[10px] text-neutral-400 font-sans">{item.quantity} × {item.price} د.ت</span>
+                      </div>
+                    </div>
+                    <span className="font-sans font-bold text-white">{(item.price * item.quantity).toLocaleString()} د.ت</span>
                   </div>
                 ))}
               </div>
-
-              <div className="flex justify-between items-center text-xs pt-2 border-t border-white/5 font-bold">
-                <span className="text-white">المبلغ الإجمالي:</span>
-                <span className="text-[#d4af37] font-sans text-sm">
-                  {searchedOrder.total.toLocaleString()} د.ت
-                </span>
-              </div>
             </div>
-          </div>
-        ) : hasSearched ? (
-          <div className="p-8 text-center bg-[#08080a] rounded-xl border border-red-500/30 space-y-2">
-            <AlertCircle className="w-8 h-8 text-red-400 mx-auto" />
-            <h4 className="text-sm font-bold text-red-400">لم يتم العثور على طلب بهذا الرمز</h4>
-            <p className="text-xs text-neutral-400">
-              يرجى التأكد من كتابة الرمز بشكل دقيق (مثال: TN-784291)
-            </p>
+
           </div>
         ) : (
-          <div className="p-8 text-center text-neutral-500 text-xs bg-[#08080a] rounded-xl border border-white/5">
-            أدخل رقم التتبع الخاص بك واضغط على &quot;بحث وتتبع&quot; للاطلاع على حالة الشحنة والتحقق من دفع D17.
-          </div>
+          hasSearched && (
+            <div className="text-center py-12 bg-[#101016] rounded-xl border border-white/10 space-y-3">
+              <p className="text-sm text-neutral-300 font-serif">
+                لم يتم العثور على طلب مسجل برقم التتبع أو الهاتف: <strong className="text-white">{searchCode}</strong>
+              </p>
+              <p className="text-xs text-neutral-500 max-w-sm mx-auto">
+                يرجى التأكد من كتابة الكود بشكل صحيح (مثال: TN-784291) أو رقم هاتفك التونسي المستخدم أثناء الطلب.
+              </p>
+            </div>
+          )
         )}
+
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 {
-  "name": "Lina Shop - متجر لينا للعطور الفاخرة بتونس",
-  "description": "متجر إلكتروني فاخر لبيع أرقى عطور النيش والعطور الفاخرة مع التوصيل السريع لكافة ولايات تونس الـ 24 بالدينار التونسي.",
+  "name": "Lina Shop | عطور فاخرة وأصلية في تونس",
+  "description": "اكتشف العطور الفاخرة والأصلية من Lina Shop مع التوصيل إلى كامل تونس والدفع عند الاستلام.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

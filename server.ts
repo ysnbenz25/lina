@@ -257,6 +257,11 @@ const CheckoutRequestSchema = z.object({
     .min(5, 'العنوان التفصيلي يجب أن لا يقل عن 5 أحرف')
     .max(200, 'العنوان التفصيلي طويل جداً')
     .transform(sanitizeText),
+  orderNotes: z
+    .string()
+    .max(300, 'ملاحظات الطلب طويلة جداً')
+    .optional()
+    .transform((val) => (val ? sanitizeText(val) : undefined)),
   paymentMethod: z.enum(['cod', 'd17'] as const, {
     message: 'طريقة الدفع غير صالحة. الخيارات المتاحة: الدفع عند الاستلام أو تطبيق D17',
   }),
@@ -305,6 +310,7 @@ export interface ServerOrder {
   address: string;
   city: string;
   delegation?: string;
+  orderNotes?: string;
   items: Array<{
     id: number;
     name: string;
@@ -445,6 +451,7 @@ app.post(
       city: data.governorate,
       delegation: data.delegation,
       address: data.address,
+      orderNotes: data.orderNotes,
       items: validatedItems,
       subtotal: calculatedSubtotal,
       shippingFee,
