@@ -594,7 +594,18 @@ app.get('/api/health', (_req: Request, res: Response) => {
 });
 
 // GET D17 Settings
-app.get('/api/settings/d17', generalRateLimiter, (_req: Request, res: Response) => {
+app.get('/api/settings/d17', generalRateLimiter, async (_req: Request, res: Response) => {
+  try {
+    const latestDbSetting = await db.select().from(d17SettingsTable).limit(1);
+    if (latestDbSetting.length > 0 && latestDbSetting[0].recipientPhone) {
+      d17Settings.recipientPhone = latestDbSetting[0].recipientPhone;
+      d17Settings.recipientName = latestDbSetting[0].recipientName;
+      d17Settings.instructions = latestDbSetting[0].instructions;
+    }
+  } catch (err) {
+    console.warn('Could not query d17SettingsTable from Cloud SQL:', err);
+  }
+
   res.json({
     success: true,
     d17Settings
@@ -602,9 +613,14 @@ app.get('/api/settings/d17', generalRateLimiter, (_req: Request, res: Response) 
 });
 
 // PATCH D17 Settings (Admin only)
-app.patch('/api/settings/d17', generalRateLimiter, (req: Request, res: Response) => {
+app.patch('/api/settings/d17', generalRateLimiter, async (req: Request, res: Response) => {
   const { recipientPhone, recipientName, instructions, adminPassword } = req.body;
-  if (adminPassword !== ADMIN_PASSWORD && req.headers['x-admin-token'] !== 'admin_authenticated_session_token') {
+  const isAuthorized =
+    adminPassword === ADMIN_PASSWORD ||
+    req.headers['x-admin-token'] === 'admin_authenticated_session_token' ||
+    req.headers['x-admin-password'] === ADMIN_PASSWORD;
+
+  if (!isAuthorized) {
     return res.status(401).json({ success: false, message: 'غير مصرح: كلمة مرور المشرف غير صحيحة' });
   }
 
@@ -616,6 +632,16 @@ app.patch('/api/settings/d17', generalRateLimiter, (req: Request, res: Response)
   }
   if (instructions && typeof instructions === 'string') {
     d17Settings.instructions = sanitizeText(instructions);
+  }
+
+  try {
+    await db.insert(d17SettingsTable).values({
+      recipientPhone: d17Settings.recipientPhone,
+      recipientName: d17Settings.recipientName,
+      instructions: d17Settings.instructions,
+    });
+  } catch (dbErr) {
+    console.warn('Could not insert d17Settings to Cloud SQL:', dbErr);
   }
 
   res.json({

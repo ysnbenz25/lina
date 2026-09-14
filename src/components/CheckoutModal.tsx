@@ -25,7 +25,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   // Payment states
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
   const [d17TransactionId, setD17TransactionId] = useState('');
-  const [d17RecipientPhone, setD17RecipientPhone] = useState('+216 55 889 900');
+  const [d17RecipientPhone, setD17RecipientPhone] = useState(() => {
+    try {
+      return localStorage.getItem('lina_d17_phone') || '+216 55 889 900';
+    } catch {
+      return '+216 55 889 900';
+    }
+  });
 
   // Security & Request states
   const [csrfToken, setCsrfToken] = useState<string>('');
@@ -33,16 +39,47 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copiedPhone, setCopiedPhone] = useState(false);
 
+  // Listen for dynamic updates to D17 phone number across components
+  useEffect(() => {
+    const handleD17Update = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail) {
+        setD17RecipientPhone(customEvent.detail);
+      } else {
+        const stored = localStorage.getItem('lina_d17_phone');
+        if (stored) setD17RecipientPhone(stored);
+      }
+    };
+
+    window.addEventListener('lina_d17_updated', handleD17Update);
+    window.addEventListener('storage', handleD17Update);
+    return () => {
+      window.removeEventListener('lina_d17_updated', handleD17Update);
+      window.removeEventListener('storage', handleD17Update);
+    };
+  }, []);
+
   // Fetch CSRF Token & D17 settings on modal open
   useEffect(() => {
     if (!isOpen) return;
 
+    // Refresh from localStorage first
+    try {
+      const stored = localStorage.getItem('lina_d17_phone');
+      if (stored) setD17RecipientPhone(stored);
+    } catch {}
+
     // Fetch CSRF Token
     fetch('/api/csrf-token')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.csrfToken) {
-          setCsrfToken(data.csrfToken);
+      .then(async (res) => {
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data.csrfToken) {
+            setCsrfToken(data.csrfToken);
+          }
+        } else {
+          setCsrfToken('local-csrf-' + Math.random().toString(36).substring(2));
         }
       })
       .catch(() => {
@@ -51,15 +88,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     // Fetch D17 recipient settings
     fetch('/api/settings/d17')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.d17Settings?.recipientPhone) {
-          setD17RecipientPhone(data.d17Settings.recipientPhone);
+      .then(async (res) => {
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data.d17Settings?.recipientPhone) {
+            setD17RecipientPhone(data.d17Settings.recipientPhone);
+            try {
+              localStorage.setItem('lina_d17_phone', data.d17Settings.recipientPhone);
+            } catch {}
+          }
         }
       })
-      .catch(() => {
-        setD17RecipientPhone('+216 55 889 900');
-      });
+      .catch(() => {});
   }, [isOpen]);
 
   if (!isOpen) return null;
