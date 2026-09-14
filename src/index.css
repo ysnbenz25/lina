@@ -4,16 +4,33 @@
   --font-serif: 'Amiri', serif;
   --font-cinzel: 'Cinzel', serif;
   --font-sans: 'Tajawal', 'Plus Jakarta Sans', sans-serif;
-  --color-charcoal-950: #0A0A0A;
-  --color-charcoal-900: #111111;
-  --color-charcoal-800: #181818;
-  --color-charcoal-700: #242424;
-  --color-ivory: #E8E1D5;
-  --color-ivory-muted: #ACA394;
-  --color-gold: #C9A227;
-  --color-gold-light: #DFC062;
-  --color-gold-champagne: #F0E6CE;
-  --color-gold-dark: #A8831A;
+  
+  /* Deep Espresso / Chocolate */
+  --color-espresso-950: #1A1311;
+  --color-espresso-900: #241B18;
+  --color-espresso-800: #332522;
+  --color-espresso-700: #44322E;
+  --color-espresso-600: #57413C;
+
+  /* Warm Cream / Ivory */
+  --color-cream: #F7F1E8;
+  --color-ivory: #FFF9F1;
+  --color-beige: #D8C8B8;
+  --color-beige-dark: #C2B09F;
+
+  /* Accents */
+  --color-dusty-rose: #C98F91;
+  --color-dusty-rose-light: #DFB2B4;
+  --color-dusty-rose-dark: #A86B6D;
+
+  --color-burgundy: #722F3F;
+  --color-burgundy-light: #8E3D50;
+  --color-burgundy-dark: #521E2B;
+
+  /* Champagne Gold */
+  --color-champagne: #D6B56A;
+  --color-champagne-light: #E5CA8A;
+  --color-champagne-dark: #B59345;
 }
 
 /* Custom smooth scrollbar */
@@ -21,19 +38,19 @@
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0A0A0A;
+  background: #241B18;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1F1F1F;
+  background: #44322E;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #C9A227;
+  background: #D6B56A;
 }
 
 /* Smooth selection */
 ::selection {
-  background-color: #C9A227;
-  color: #0A0A0A;
+  background-color: #722F3F;
+  color: #FFF9F1;
 }
 

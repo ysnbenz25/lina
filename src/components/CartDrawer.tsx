@@ -6,8 +6,8 @@ interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
-  onUpdateQuantity: (id: number, delta: number) => void;
-  onRemoveItem: (id: number) => void;
+  onUpdateQuantity: (id: number, delta: number, selectedSize?: string) => void;
+  onRemoveItem: (id: number, selectedSize?: string) => void;
   onCheckout: () => void;
   freeShippingThreshold?: number;
   standardShippingFee?: number;
@@ -156,13 +156,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </button>
             </div>
           ) : (
-            items.map((item) => (
+            items.map((item, index) => (
               <div
-                key={item.id}
-                className="flex items-center gap-4 p-3 bg-[#111111] border border-white/5 relative group"
+                key={`${item.id}-${item.selectedSize || index}`}
+                className="flex items-center gap-4 p-3 bg-[#111111] border border-white/5 relative group rounded-xl"
               >
                 {/* Thumbnail */}
-                <div className="w-16 h-20 bg-[#161616] shrink-0 overflow-hidden border border-white/5">
+                <div className="w-16 h-20 bg-[#161616] shrink-0 overflow-hidden border border-white/5 rounded-lg">
                   <img
                     src={item.image}
                     alt={item.name}
@@ -175,18 +175,25 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <h4 className="text-xs sm:text-sm font-serif font-bold text-[#E8E1D5] truncate">
                     {item.arabicName || item.name}
                   </h4>
-                  <p className="text-[10px] text-[#ACA394] font-serif">
-                    {item.volume || '100 ml'}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded bg-[#d4af37]/15 text-[#d4af37] text-[10px] font-bold">
+                      الحجم: {item.selectedSize || item.volume || '30ml'}
+                    </span>
+                    {item.fragranceType && (
+                      <span className="text-[10px] text-neutral-400 truncate">
+                        {item.fragranceType}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs font-serif font-bold text-[#C9A227] block">
                     {item.price} د.ت
                   </span>
 
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-2 pt-1">
-                    <div className="flex items-center border border-white/10 bg-[#161616]">
+                    <div className="flex items-center border border-white/10 bg-[#161616] rounded-lg overflow-hidden">
                       <button
-                        onClick={() => onUpdateQuantity(item.id, -1)}
+                        onClick={() => onUpdateQuantity(item.id, -1, item.selectedSize)}
                         className="px-2 py-0.5 text-xs text-[#E8E1D5] hover:text-[#C9A227] cursor-pointer"
                       >
                         -
@@ -195,7 +202,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => onUpdateQuantity(item.id, 1)}
+                        onClick={() => onUpdateQuantity(item.id, 1, item.selectedSize)}
                         className="px-2 py-0.5 text-xs text-[#E8E1D5] hover:text-[#C9A227] cursor-pointer"
                       >
                         +
@@ -203,7 +210,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </div>
 
                     <button
-                      onClick={() => onRemoveItem(item.id)}
+                      onClick={() => onRemoveItem(item.id, item.selectedSize)}
                       className="p-1 text-neutral-500 hover:text-red-400 cursor-pointer mr-auto"
                       title="حذف من السلة"
                     >

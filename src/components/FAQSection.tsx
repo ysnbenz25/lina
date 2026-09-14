@@ -6,28 +6,28 @@ export const FAQSection: React.FC = () => {
 
   const faqs = [
     {
-      q: 'هل العطور أصلية ومضمونة؟',
-      a: 'نعم، جميع عطور لينا شوب أصلية 100%، مستخلصة من خامات وزيوت عطرية نقية معتمدة وفق أعلى معايير العطور العالمية (Haute Parfumerie). نلتزم بنقاء التركيبة ونسب تركيز عالية (Extrait de Parfum / Eau de Parfum) تضمن ثباتاً يدوم طويلاً.'
+      q: 'ما هي طبيعة العطور والتركيبات المتوفرة في LINA SHOP؟',
+      a: 'LINA SHOP متجر تونسي متخصص في الزيوت العطرية المركزة والتركيبات المستوحاة بدقة من أشهر الروائح العالمية. نود التأكيد بكل شفافية أننا لا نبيع العطور الأصلية التابعة لتلك الشركات العالمية، بل نقدم بدائل تركيبية وزيوت نقية بأعلى درجات الثبات والفوحان وبأسعار رمزية مناسبة للجميع.'
     },
     {
       q: 'كم تكلفة التوصيل في تونس؟',
-      a: 'التوصيل مجاني تماماً لجميع الطلبات التي تتجاوز قيمتها 150 د.ت. أما بالنسبة للطلبات الأقل، فتكلفة التوصيل رمزية وثابتة قدرها 7 دنانير تونسية فقط لجميع الولايات الـ 24 دون استثناء.'
+      a: 'نوفر التوصيل السريع لكافة الـ 24 ولاية تونسية دون استثناء بتكلفة رمزية وثابتة قدرها 7 دنانير تونسية فقط، مع توصيل مجاني للعروض والباقات الخاصة.'
     },
     {
-      q: 'كم يستغرق وصول الطلب؟',
-      a: 'يستغرق التوصيل عادة بين 24 إلى 48 ساعة عمل كحد أقصى، حيث يتواصل معك موزع التوصيل مسبقاً عبر الهاتف لتنسيق الموعد والمكان المناسب لاستلام طردك.'
+      q: 'كم يستغرق وصول الطلب إلى باب منزلي؟',
+      a: 'يستغرق التوصيل عادة بين 24 إلى 48 ساعة عمل. يتصل بك عون التوصيل هاتفياً قبل الوصول لتأكيد العنوان والوقت المناسب لك.'
     },
     {
-      q: 'هل الدفع عند الاستلام متوفر؟',
-      a: 'نعم، الدفع عند الاستلام (Paiement à la livraison) هو وسيلتنا الأساسية، حيث يمكنك معاينة الطرد قبل الدفع لعون التوصيل. كما نوفر خيار الدفع الإلكتروني السريع عبر خدمة D17 التابعة للبريد التونسي لمن يرغب.'
+      q: 'هل الدفع عند الاستلام متاح؟ وكيف يعمل الدفع عبر D17؟',
+      a: 'نعم، الدفع عند الاستلام (Paiement à la livraison) هو الخيار الافتراضي والأساسي. كما نوفر إمكانية الدفع المسبق عبر تطبيق D17 التابع للبريد التونسي لمن يفضل ذلك مع تأكيد فوري للطلب.'
     },
     {
-      q: 'كيف يمكنني تتبع طلبي؟',
-      a: 'بمجرد تأكيد طلبك، ستحصل على رمز تتبع خاص بشحنتك (مثال: TN-849102). يمكنك الضغط على زر "تتبع الطلب" في أعلى الموقع وإدخال الرمز لمشاهدة الحالة اللحظية لطردك من التجهيز وحتى التسليم.'
+      q: 'كيف يمكنني تتبع حالة طلبي؟',
+      a: 'بمجرد تسجيل الطلب، ستتلقى رمز تتبع فوري (مثال: TN-849102). يمكنك استخدام ميزة "تتبع الطلب" في أعلى الصفحة لمعرفة وضعية طردك في أي وقت.'
     },
     {
-      q: 'هل يمكنني استبدال أو إرجاع الطلب؟',
-      a: 'نعم بالتأكيد، يحق لك استبدال أو إرجاع أي منتج في غضون 7 أيام من تاريخ الاستلام في حال كان المنتج بحالته الأصلية غير مفتوح أو في حال وجود أي عيب مصنعي في البخاخ أو الزجاجة. فريق خدمة العملاء جاهز لخدمتك فوراً.'
+      q: 'ما هي الأحجام المتوفرة من العطور والزيوت؟',
+      a: 'نوفر تشكيلة واسعة من الأحجام تناسب كل الاحتياجات: قوارير الزيت العطري المركز (5 مل و10 مل و15 مل بكرة دوارة Roll-on)، وبخاخات التركيبة العطرية المستوحاة (30 مل و50 مل و100 مل).'
     }
   ];
 
@@ -36,19 +36,19 @@ export const FAQSection: React.FC = () => {
   };
 
   return (
-    <section id="faq" className="py-24 sm:py-32 bg-[#0A0A0A] border-b border-white/5">
+    <section id="faq" className="py-24 sm:py-32 bg-[#241B18] border-b border-[#D8C8B8]/15">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="text-center mb-16 space-y-3">
-          <span className="font-serif text-[11px] tracking-[0.35em] text-[#C9A227] uppercase block">
-            QUESTIONS FRÉQUEMMENT POSÉES
+          <span className="font-serif text-[11px] tracking-[0.35em] text-[#D6B56A] uppercase block font-bold">
+            QUESTIONS FRÉQUEMMENT POSÉES • الأسئلة الشائعة
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#E8E1D5] font-bold tracking-tight">
-            الأسئلة الشائعة
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#FFF9F1] font-bold tracking-tight">
+            كل ما تود معرفته عن لينا شوب
           </h2>
-          <p className="text-xs sm:text-sm text-[#ACA394] font-serif">
-            كل ما تحتاج لمعرفته حول الشراء، التوصيل والضمان في لينا شوب
+          <p className="text-xs sm:text-sm text-[#D8C8B8] font-serif">
+            إجابات واضحة وشفافة حول منتجاتنا، التوصيل في تونس، وطرق الدفع
           </p>
         </div>
 
@@ -59,25 +59,25 @@ export const FAQSection: React.FC = () => {
             return (
               <div
                 key={index}
-                className="bg-[#111111] border border-white/5 hover:border-white/10 transition-colors"
+                className="bg-[#332522] border border-[#D8C8B8]/20 hover:border-[#D6B56A]/50 transition-all rounded-2xl overflow-hidden shadow-sm"
               >
                 <button
                   onClick={() => toggleFAQ(index)}
                   className="w-full py-5 px-6 text-right flex items-center justify-between gap-4 cursor-pointer focus:outline-none"
                   aria-expanded={isOpen}
                 >
-                  <span className="font-serif text-base sm:text-lg text-[#E8E1D5] font-medium">
+                  <span className="font-serif text-base sm:text-lg text-[#F7F1E8] font-medium">
                     {faq.q}
                   </span>
 
-                  <div className="w-7 h-7 rounded-full bg-[#181818] flex items-center justify-center text-[#C9A227] shrink-0">
-                    {isOpen ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                  <div className="w-8 h-8 rounded-full bg-[#722F3F] flex items-center justify-center text-[#D6B56A] shrink-0 shadow-sm">
+                    {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                   </div>
                 </button>
 
                 {isOpen && (
-                  <div className="px-6 pb-6 pt-1 text-right border-t border-white/5">
-                    <p className="text-xs sm:text-sm text-[#ACA394] leading-relaxed font-sans font-light">
+                  <div className="px-6 pb-6 pt-1 text-right border-t border-[#D8C8B8]/15">
+                    <p className="text-xs sm:text-sm text-[#D8C8B8] leading-relaxed font-sans font-light">
                       {faq.a}
                     </p>
                   </div>

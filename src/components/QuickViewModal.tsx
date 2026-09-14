@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Perfume, CartItem } from '../types';
-import { X, ShoppingBag, Zap, Star, Sparkles, Truck, ShieldCheck, Check, Plus, Minus } from 'lucide-react';
+import { X, ShoppingBag, Zap, Star, Sparkles, Truck, ShieldCheck, Check, Plus, Minus, Info } from 'lucide-react';
 
 interface QuickViewModalProps {
   perfume: Perfume | null;
@@ -17,14 +17,24 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
 }) => {
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
-  const [selectedSize, setSelectedSize] = useState<string>('100 ml');
+  const [selectedSize, setSelectedSize] = useState<string>('30ml');
+
+  // Derive size options for dynamic pricing
+  const sizeOptions = perfume?.sizeOptions && perfume.sizeOptions.length > 0
+    ? perfume.sizeOptions
+    : (perfume?.sizes || ['5ml', '10ml', '20ml', '30ml', '50ml', '100ml']).map((s, idx) => ({
+        size: s,
+        price: idx === 0 ? (perfume?.price || 16) : Math.round((perfume?.price || 16) * (1 + idx * 0.4)),
+        originalPrice: perfume?.originalPrice ? Math.round(perfume.originalPrice * (1 + idx * 0.4)) : undefined,
+      }));
 
   // Reset state when perfume changes
   useEffect(() => {
     if (perfume) {
       setSelectedImage(perfume.image);
       setQuantity(1);
-      setSelectedSize(perfume.sizes && perfume.sizes.length > 0 ? perfume.sizes[perfume.sizes.length - 1] : '100 ml');
+      const initialSize = sizeOptions[0]?.size || '30ml';
+      setSelectedSize(initialSize);
     }
   }, [perfume]);
 
@@ -34,12 +44,16 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
     ? perfume.gallery
     : [perfume.image];
 
-  const availableSizes = perfume.sizes && perfume.sizes.length > 0
-    ? perfume.sizes
-    : ['50 ml', '100 ml'];
+  // Find active option
+  const activeOption = sizeOptions.find((opt) => opt.size === selectedSize) || sizeOptions[0];
+  const activePrice = activeOption ? activeOption.price : perfume.price;
+  const activeOriginalPrice = activeOption?.originalPrice || perfume.originalPrice;
+  const hasDiscount = activeOriginalPrice && activeOriginalPrice > activePrice;
+  const discountAmount = hasDiscount ? activeOriginalPrice - activePrice : 0;
+  const discountPercent = hasDiscount ? Math.round((discountAmount / activeOriginalPrice) * 100) : 0;
 
-  const discountAmount = perfume.originalPrice - perfume.price;
-  const discountPercent = Math.round((discountAmount / perfume.originalPrice) * 100);
+  const fragranceTypeLabel = perfume.fragranceType || (perfume.category === 'العطور الزيتية' ? 'عطر زيتي مركز' : 'تركيبة عطرية مستوحاة');
+  const genderLabel = perfume.gender === 'women' ? 'عطر نسائي' : perfume.gender === 'men' ? 'عطر رجالي' : 'عطر للجنسين';
 
   return (
     <div
@@ -65,7 +79,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Gallery Section (Left in RTL, 6 Cols) */}
+          {/* Gallery Section (6 Cols) */}
           <div className="lg:col-span-6 space-y-4">
             
             {/* Main Featured Image */}
@@ -75,13 +89,20 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 alt={perfume.arabicName}
                 className="w-full h-full object-cover object-center filter contrast-105"
               />
-              {discountAmount > 0 && (
+              {hasDiscount && (
                 <div className="absolute top-4 right-4 z-10">
                   <span className="px-3 py-1 text-xs font-bold rounded-lg bg-[#d4af37] text-[#070709] font-sans shadow-md">
                     وفر {discountAmount} د.ت (-{discountPercent}%)
                   </span>
                 </div>
               )}
+
+              {/* Fragrance Type Tag */}
+              <div className="absolute bottom-4 right-4 z-10">
+                <span className="px-3 py-1 text-xs font-semibold rounded-lg bg-[#070709]/85 text-[#d4af37] border border-[#d4af37]/30 font-serif">
+                  {fragranceTypeLabel}
+                </span>
+              </div>
             </div>
 
             {/* Thumbnails list */}
@@ -110,33 +131,45 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 <Truck className="w-5 h-5" />
               </div>
               <div className="text-xs">
-                <p className="font-bold text-white">التوصيل إلى كامل تونس (24 - 48 ساعة)</p>
-                <p className="text-neutral-400 mt-0.5">توصيل مجاني عند الشراء بـ 150 د.ت أو أكثر مع الدفع عند الاستلام</p>
+                <p className="font-bold text-white">توصيل لكامل تونس (24 - 48 ساعة)</p>
+                <p className="text-neutral-400 mt-0.5">الدفع عند الاستلام نقداً أو عبر تطبيق D17 البريدي</p>
               </div>
             </div>
 
           </div>
 
-          {/* Details Section (Right in RTL, 6 Cols) */}
+          {/* Details Section (6 Cols) */}
           <div className="lg:col-span-6 space-y-5 text-right">
             
             {/* Badges & Titles */}
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#d4af37] bg-[#d4af37]/10 px-3 py-1 rounded-full border border-[#d4af37]/30 font-serif">
-                  {perfume.badge}
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {perfume.badge && (
+                  <span className="text-xs font-bold text-[#d4af37] bg-[#d4af37]/10 px-3 py-1 rounded-full border border-[#d4af37]/30 font-serif">
+                    {perfume.badge}
+                  </span>
+                )}
+                <span className="text-xs text-neutral-300 bg-[#161622] px-2.5 py-1 rounded-full border border-white/10">
+                  {genderLabel}
                 </span>
-                <span className="text-xs text-neutral-400 font-serif">
-                  {perfume.category}
+                <span className="text-xs text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 font-medium">
+                  {fragranceTypeLabel}
                 </span>
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-bold text-white font-serif tracking-tight mt-1">
                 {perfume.arabicName}
               </h2>
-              <p className="text-xs sm:text-sm text-neutral-400 tracking-wider font-sans font-medium">
-                {perfume.name} • {perfume.volume}
-              </p>
+              
+              {perfume.inspiredBy ? (
+                <p className="text-xs sm:text-sm text-[#d4af37] font-serif font-medium">
+                  {perfume.inspiredBy}
+                </p>
+              ) : (
+                <p className="text-xs sm:text-sm text-neutral-400 tracking-wider font-sans">
+                  {perfume.name}
+                </p>
+              )}
             </div>
 
             {/* Rating */}
@@ -146,25 +179,36 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   <Star key={i} className="w-3.5 h-3.5 fill-[#d4af37]" />
                 ))}
               </div>
-              <span className="font-bold text-white font-sans">{perfume.rating}</span>
-              <span className="text-neutral-500 font-sans">({perfume.reviewsCount} تقييم موثق من حرفاء تونس)</span>
+              <span className="font-bold text-white font-sans">{perfume.rating || 4.9}</span>
+              <span className="text-neutral-500 font-sans">({perfume.reviewsCount || 85} تقييم موثق من حرفاء تونس)</span>
             </div>
 
-            {/* Price Box */}
+            {/* Dynamic Price Box */}
             <div className="p-4 rounded-xl bg-[#121218] border border-white/5 flex items-baseline justify-between">
               <div className="flex items-baseline gap-3">
                 <span className="text-2xl sm:text-3xl font-bold text-[#d4af37] font-sans">
-                  {perfume.price} د.ت
+                  {activePrice} د.ت
                 </span>
-                {perfume.originalPrice > perfume.price && (
+                {hasDiscount && (
                   <span className="text-sm sm:text-base text-neutral-500 line-through font-sans">
-                    {perfume.originalPrice} د.ت
+                    {activeOriginalPrice} د.ت
                   </span>
                 )}
               </div>
-              <span className="text-xs text-emerald-400 font-medium">
-                متوفر بالمستودع بتونس
+              <span className="text-xs text-neutral-300 font-serif">
+                الحجم المحدد: <strong className="text-[#d4af37]">{selectedSize}</strong>
               </span>
+            </div>
+
+            {/* Mandatory Transparency Disclaimer Box */}
+            <div className="p-3 rounded-xl bg-[#111118] border border-[#d4af37]/35 text-xs text-neutral-300 space-y-1">
+              <div className="flex items-center gap-1.5 text-[#d4af37] font-bold">
+                <Info className="w-4 h-4" />
+                <span>إشعار الشفافية والأصالة:</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-neutral-400">
+                تركيبة عطرية مستوحاة من الرائحة الأصلية — المنتج ليس أصليًا أو تابعًا للعلامة التجارية المذكورة.
+              </p>
             </div>
 
             {/* Description */}
@@ -172,55 +216,53 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
               {perfume.description}
             </p>
 
-            {/* Fragrance Notes (الهرم العطري الكامل) */}
-            <div className="space-y-2.5 p-4 rounded-xl bg-[#0f0f15] border border-[#d4af37]/25 text-xs text-right">
-              <div className="flex items-center gap-1.5 text-[#d4af37] font-serif font-bold">
-                <Sparkles className="w-4 h-4" />
-                <span>الهرم العطري والنوتات (Pyramide Olfactive):</span>
-              </div>
-              
-              <div className="grid grid-cols-1 gap-2 pt-1 border-t border-white/5">
-                <div className="flex items-start gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#d4af37] shrink-0 mt-1" />
-                  <p className="text-neutral-300">
-                    <strong className="text-white font-semibold">افتتاحية العطر (Top Notes):</strong> {perfume.notes.top}
-                  </p>
+            {/* Fragrance Notes */}
+            {perfume.notes && (
+              <div className="space-y-2 p-3.5 rounded-xl bg-[#0f0f15] border border-white/5 text-xs text-right">
+                <div className="flex items-center gap-1.5 text-[#d4af37] font-serif font-bold">
+                  <Sparkles className="w-4 h-4" />
+                  <span>النوتات والهرم العطري:</span>
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#b89428] shrink-0 mt-1" />
-                  <p className="text-neutral-300">
-                    <strong className="text-white font-semibold">قلب العطر (Heart Notes):</strong> {perfume.notes.heart}
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#8c6d1a] shrink-0 mt-1" />
-                  <p className="text-neutral-300">
-                    <strong className="text-white font-semibold">قاعدة العطر (Base Notes):</strong> {perfume.notes.base}
-                  </p>
+                <div className="space-y-1.5 pt-1 text-[11px] text-neutral-300">
+                  {perfume.notes.top && (
+                    <p><strong className="text-white">الافتتاحية:</strong> {perfume.notes.top}</p>
+                  )}
+                  {perfume.notes.heart && (
+                    <p><strong className="text-white">القلب:</strong> {perfume.notes.heart}</p>
+                  )}
+                  {perfume.notes.base && (
+                    <p><strong className="text-white">القاعدة:</strong> {perfume.notes.base}</p>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Size Selector */}
+            {/* Size Selector with Price per Size */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-neutral-300 block">
-                الحجم المتوفر:
+                اختر الحجم (يتغير السعر فوراً):
               </label>
-              <div className="flex items-center gap-2">
-                {availableSizes.map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setSelectedSize(size)}
-                    className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                      selectedSize === size
-                        ? 'bg-[#d4af37] text-[#070709] border-[#d4af37] font-bold shadow-md'
-                        : 'bg-[#121218] text-neutral-300 border-white/10 hover:border-white/30'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+              <div className="grid grid-cols-3 sm:grid-cols-3 gap-2">
+                {sizeOptions.map((opt) => {
+                  const isSelected = selectedSize === opt.size;
+                  return (
+                    <button
+                      key={opt.size}
+                      type="button"
+                      onClick={() => setSelectedSize(opt.size)}
+                      className={`p-2.5 rounded-xl text-center transition-all cursor-pointer border ${
+                        isSelected
+                          ? 'bg-[#d4af37] text-[#070709] border-[#d4af37] font-bold shadow-md scale-[1.02]'
+                          : 'bg-[#121218] text-neutral-300 border-white/10 hover:border-white/30'
+                      }`}
+                    >
+                      <span className="block text-xs font-bold font-sans">{opt.size}</span>
+                      <span className={`block text-[11px] mt-0.5 ${isSelected ? 'text-[#070709] font-bold' : 'text-[#d4af37]'}`}>
+                        {opt.price} د.ت
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -249,7 +291,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 </button>
               </div>
               <span className="text-xs text-neutral-400 font-sans">
-                المجموع: <strong className="text-[#d4af37]">{(perfume.price * quantity).toLocaleString()} د.ت</strong>
+                المجموع: <strong className="text-[#d4af37]">{(activePrice * quantity).toLocaleString()} د.ت</strong>
               </span>
             </div>
 
@@ -258,7 +300,13 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  onAddToCart(perfume, quantity, selectedSize);
+                  const customized = {
+                    ...perfume,
+                    price: activePrice,
+                    originalPrice: activeOriginalPrice || perfume.originalPrice,
+                    volume: selectedSize,
+                  };
+                  onAddToCart(customized, quantity, selectedSize);
                   onClose();
                 }}
                 className="w-full py-3.5 bg-[#171722] hover:bg-[#20202e] text-neutral-100 hover:text-white border border-[#d4af37]/40 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95"
@@ -270,7 +318,13 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  onBuyNow(perfume, quantity, selectedSize);
+                  const customized = {
+                    ...perfume,
+                    price: activePrice,
+                    originalPrice: activeOriginalPrice || perfume.originalPrice,
+                    volume: selectedSize,
+                  };
+                  onBuyNow(customized, quantity, selectedSize);
                   onClose();
                 }}
                 className="w-full py-3.5 bg-gradient-to-r from-[#d4af37] to-[#b89428] hover:from-[#e5ca78] hover:to-[#d4af37] text-[#070709] rounded-xl font-bold text-xs transition-all shadow-xl shadow-[#d4af37]/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95"

@@ -275,14 +275,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     >
       <div
         id="checkout-modal"
-        className="bg-[#0b0b10] border border-[#d4af37]/40 rounded-2xl max-w-2xl w-full p-5 sm:p-8 relative shadow-2xl my-auto text-right animate-in zoom-in-95 duration-200 max-h-[95vh] overflow-y-auto"
+        className="bg-[#241B18] border border-[#D8C8B8]/25 rounded-2xl max-w-2xl w-full p-5 sm:p-8 relative shadow-2xl my-auto text-right animate-in zoom-in-95 duration-200 max-h-[95vh] overflow-y-auto"
       >
         {/* Close Button */}
         <button
           id="close-checkout-modal"
           onClick={onClose}
           disabled={isSubmitting}
-          className="absolute top-4 left-4 p-2 text-neutral-400 hover:text-white rounded-full bg-[#14141c] hover:bg-[#1e1e28] border border-white/10 transition-colors cursor-pointer disabled:opacity-50"
+          className="absolute top-4 left-4 p-2 text-[#D8C8B8] hover:text-white rounded-full bg-[#332522] hover:bg-[#3d2c29] border border-[#D8C8B8]/20 transition-colors cursor-pointer disabled:opacity-50"
           aria-label="إغلاق"
         >
           <X className="w-5 h-5" />
@@ -290,14 +290,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
         {/* Modal Title */}
         <div className="mb-6 space-y-1">
-          <div className="inline-flex items-center gap-1.5 text-xs text-[#d4af37] font-serif tracking-widest uppercase font-bold">
+          <div className="inline-flex items-center gap-1.5 text-xs text-[#D6B56A] font-serif tracking-widest uppercase font-bold">
             <Truck className="w-3.5 h-3.5" />
             <span>FINALISER VOTRE COMMANDE • إتمام الطلب</span>
           </div>
-          <h2 id="checkout-title" className="text-2xl sm:text-3xl font-bold text-white font-serif">
+          <h2 id="checkout-title" className="text-2xl sm:text-3xl font-bold text-[#FFF9F1] font-serif">
             تأكيد الطلب والتوصيل بتونس
           </h2>
-          <p className="text-xs sm:text-sm text-neutral-400">
+          <p className="text-xs sm:text-sm text-[#D8C8B8]">
             أدخل بياناتك وسيتم شحن طلبك إلى باب منزلك في غضون 24 إلى 48 ساعة.
           </p>
         </div>
@@ -444,8 +444,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <label
                 className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${
                   paymentMethod === 'cod'
-                    ? 'border-[#d4af37] bg-[#d4af37]/10 ring-1 ring-[#d4af37]'
-                    : 'border-white/10 bg-[#16161f] hover:border-white/20'
+                    ? 'border-[#D6B56A] bg-[#D6B56A]/15 ring-1 ring-[#D6B56A]'
+                    : 'border-[#D8C8B8]/20 bg-[#1E1513] hover:border-[#D8C8B8]/40'
                 }`}
               >
                 <input
@@ -454,13 +454,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   value="cod"
                   checked={paymentMethod === 'cod'}
                   onChange={() => setPaymentMethod('cod')}
-                  className="mt-1 accent-[#d4af37]"
+                  className="mt-1 accent-[#D6B56A]"
                 />
                 <div className="space-y-1">
-                  <span className="text-xs sm:text-sm font-bold text-white block">
+                  <span className="text-xs sm:text-sm font-bold text-[#FFF9F1] block">
                     الدفع عند الاستلام (COD)
                   </span>
-                  <p className="text-[11px] text-neutral-300">
+                  <p className="text-[11px] text-[#D8C8B8]">
                     تدفع نقداً بالدينار التونسي للموزع عند فحص واستلام شحنتك.
                   </p>
                 </div>
@@ -470,8 +470,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <label
                 className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${
                   paymentMethod === 'd17'
-                    ? 'border-[#d4af37] bg-[#d4af37]/10 ring-1 ring-[#d4af37]'
-                    : 'border-white/10 bg-[#16161f] hover:border-white/20'
+                    ? 'border-[#D6B56A] bg-[#D6B56A]/15 ring-1 ring-[#D6B56A]'
+                    : 'border-[#D8C8B8]/20 bg-[#1E1513] hover:border-[#D8C8B8]/40'
                 }`}
               >
                 <input
@@ -480,18 +480,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   value="d17"
                   checked={paymentMethod === 'd17'}
                   onChange={() => setPaymentMethod('d17')}
-                  className="mt-1 accent-[#d4af37]"
+                  className="mt-1 accent-[#D6B56A]"
                 />
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs sm:text-sm font-bold text-white block">
+                    <span className="text-xs sm:text-sm font-bold text-[#FFF9F1] block">
                       تطبيق D17 (البريد التونسي)
                     </span>
-                    <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-mono">
+                    <span className="text-[9px] bg-[#D6B56A]/20 text-[#D6B56A] px-1.5 py-0.2 rounded font-mono font-bold">
                       La Poste
                     </span>
                   </div>
-                  <p className="text-[11px] text-neutral-300">
+                  <p className="text-[11px] text-[#D8C8B8]">
                     تحويل إلكتروني فوري ومباشر عبر تطبيق D17 الرسمي.
                   </p>
                 </div>
@@ -500,15 +500,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
             {/* D17 Details Drawer */}
             {paymentMethod === 'd17' && (
-              <div className="mt-3 p-4 rounded-xl bg-[#09090d] border border-amber-500/30 space-y-3 animate-in fade-in">
+              <div className="mt-3 p-4 rounded-xl bg-[#1E1513] border border-[#D6B56A]/30 space-y-3 animate-in fade-in">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-neutral-300">
-                    رقم هاتف متجر لينا المسجل في D17:
+                  <span className="text-xs font-semibold text-[#F7F1E8]">
+                    رقم هاتف متجر LINA SHOP في تطبيق D17:
                   </span>
                   <button
                     type="button"
                     onClick={handleCopyPhone}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#1c1c27] text-neutral-200 hover:text-white border border-white/10 text-xs transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#332522] text-[#F7F1E8] hover:text-white border border-[#D8C8B8]/20 text-xs transition-colors cursor-pointer"
                   >
                     {copiedPhone ? (
                       <>
@@ -517,20 +517,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5 text-[#d4af37]" />
+                        <Copy className="w-3.5 h-3.5 text-[#D6B56A]" />
                         <span className="text-[10px]">نسخ الرقم</span>
                       </>
                     )}
                   </button>
                 </div>
 
-                <div className="p-2.5 rounded-lg bg-[#14141c] text-center font-mono text-sm sm:text-base font-bold text-[#d4af37] tracking-wider border border-[#d4af37]/20">
+                <div className="p-2.5 rounded-lg bg-[#241B18] text-center font-mono text-sm sm:text-base font-bold text-[#D6B56A] tracking-wider border border-[#D6B56A]/20" dir="ltr">
                   {d17RecipientPhone}
                 </div>
 
                 <div>
-                  <label className="text-xs text-neutral-300 block mb-1 font-semibold">
-                    رقم العملية (Transaction ID المعطى من D17) <span className="text-[#d4af37]">*</span>
+                  <label className="text-xs text-[#F7F1E8] block mb-1 font-semibold">
+                    رقم العملية (Transaction ID المعطى من D17) <span className="text-[#D6B56A]">*</span>
                   </label>
                   <input
                     type="text"
@@ -540,10 +540,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     value={d17TransactionId}
                     onChange={(e) => setD17TransactionId(e.target.value)}
                     placeholder="مثال: TXN-893421 أو 9283719"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#16161f] border border-amber-500/40 focus:border-[#d4af37] text-white text-xs sm:text-sm font-mono text-left focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#241B18] border border-[#D6B56A]/40 focus:border-[#D6B56A] text-[#FFF9F1] text-xs sm:text-sm font-mono text-left focus:outline-none"
                   />
-                  <span className="text-[10px] text-neutral-400 block mt-1">
-                    * ستكون حالة الطلب "معلق التحقق (Pending Verification)" حتى التأكد الفعلي من وصول التحويل.
+                  <span className="text-[10px] text-[#D8C8B8] block mt-1">
+                    * ستكون حالة الطلب "معلق التحقق" حتى التأكد الفعلي من وصول التحويل.
                   </span>
                 </div>
               </div>
@@ -559,8 +559,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
             {/* Quick preview of items */}
             <div className="max-h-28 overflow-y-auto space-y-2 border-b border-white/5 pb-3">
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between text-xs text-neutral-300">
+              {cartItems.map((item, idx) => (
+                <div key={`${item.id}-${item.selectedSize || idx}`} className="flex items-center justify-between text-xs text-neutral-300">
                   <div className="flex items-center gap-2 truncate max-w-[70%]">
                     <span className="font-semibold text-white font-sans">{item.quantity}×</span>
                     <span className="truncate">{item.arabicName}</span>
@@ -587,9 +587,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <span className="font-sans text-white">{shippingFee} د.ت</span>
                 )}
               </div>
-              <div className="pt-2 border-t border-white/10 flex justify-between items-baseline">
-                <span className="font-bold text-white font-serif">المجموع النهائي للدفع:</span>
-                <span className="text-xl font-bold text-[#d4af37] font-sans">
+              <div className="pt-2 border-t border-[#D8C8B8]/20 flex justify-between items-baseline">
+                <span className="font-bold text-[#FFF9F1] font-serif">المجموع النهائي للدفع:</span>
+                <span className="text-xl font-bold text-[#D6B56A] font-sans">
                   {grandTotal.toLocaleString()} د.ت
                 </span>
               </div>
@@ -601,7 +601,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             type="submit"
             id="confirm-order-submit-btn"
             disabled={isSubmitting}
-            className="w-full py-4 bg-gradient-to-r from-[#d4af37] to-[#b89428] hover:from-[#e5ca78] hover:to-[#d4af37] text-[#070709] font-bold text-sm sm:text-base rounded-xl transition-all shadow-xl shadow-[#d4af37]/25 flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+            className="w-full py-4 bg-gradient-to-r from-[#D6B56A] to-[#B8934A] hover:from-[#e3c47f] hover:to-[#D6B56A] text-[#1E1513] font-bold text-sm sm:text-base rounded-xl transition-all shadow-xl shadow-[#D6B56A]/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
@@ -617,8 +617,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </button>
 
           {/* Security guarantee line */}
-          <div className="flex items-center justify-center gap-2 text-[11px] text-neutral-400">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#d4af37]" />
+          <div className="flex items-center justify-center gap-2 text-[11px] text-[#D8C8B8]">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#D6B56A]" />
             <span>معاملة مشفرة وآمنة • خصوصية بياناتك محمية 100%</span>
           </div>
 

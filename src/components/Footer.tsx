@@ -18,28 +18,28 @@ export const Footer: React.FC<FooterProps> = ({
   const storeAddress = settings?.storeAddress || 'تونس، شارع الحبيب بورقيبة';
 
   return (
-    <footer id="footer" className="bg-[#0A0A0A] text-[#E8E1D5] border-t border-white/10 pt-20 pb-12">
+    <footer id="footer" className="bg-[#1A1311] text-[#F7F1E8] border-t border-[#D8C8B8]/20 pt-20 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main 4-Column Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8 pb-16 border-b border-white/5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8 pb-16 border-b border-[#D8C8B8]/15">
           
           {/* Column 1: Brand & Philosophy (2 spans on desktop) */}
           <div className="lg:col-span-2 text-right space-y-5">
             <div className="flex flex-col text-right">
               <div className="flex items-center gap-2">
-                <span className="font-serif text-2xl font-bold tracking-[0.22em] text-[#E8E1D5] uppercase">
+                <span className="font-serif text-2xl font-bold tracking-[0.22em] text-[#FFF9F1] uppercase">
                   LINA SHOP
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#C9A227]" />
+                <span className="w-2 h-2 rounded-full bg-[#D6B56A]" />
               </div>
-              <span className="text-[9px] tracking-[0.35em] text-[#C9A227] font-serif uppercase mt-0.5">
-                HAUTE PARFUMERIE
+              <span className="text-[10px] tracking-[0.35em] text-[#D6B56A] font-serif uppercase mt-0.5 font-bold">
+                PARFUMS & HUILES PARFUMÉES • تونس
               </span>
             </div>
 
-            <p className="text-xs text-[#ACA394] leading-relaxed font-sans font-light max-w-sm">
-              دار عطور تونسية فاخرة تُعنى بابتكار وتوفير أرقى التوليفات العطرية المستوحاة من سحر الشرق وعراقة العطور العالمية. حضور ملكي يدوم في كل تفاصيلك.
+            <p className="text-xs text-[#D8C8B8] leading-relaxed font-sans font-normal max-w-sm">
+              متجر تونسي متخصص في أرقى الزيوت العطرية والتركيبات المستوحاة من أشهر العطور العالمية. جودة وثبات ممتاز بأسعار رمزية ومناسبة للجميع.
             </p>
 
             <div className="pt-2 flex items-center gap-3">
@@ -47,7 +47,7 @@ export const Footer: React.FC<FooterProps> = ({
                 href="https://instagram.com"
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-full bg-[#141414] border border-white/10 hover:border-[#C9A227] hover:text-[#C9A227] flex items-center justify-center transition-colors cursor-pointer"
+                className="w-9 h-9 rounded-xl bg-[#332522] border border-[#D8C8B8]/20 hover:border-[#D6B56A] hover:text-[#D6B56A] flex items-center justify-center transition-colors cursor-pointer text-[#D8C8B8]"
                 aria-label="Instagram"
               >
                 <Instagram className="w-4 h-4" />
@@ -56,7 +56,7 @@ export const Footer: React.FC<FooterProps> = ({
                 href="https://facebook.com"
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-full bg-[#141414] border border-white/10 hover:border-[#C9A227] hover:text-[#C9A227] flex items-center justify-center transition-colors cursor-pointer"
+                className="w-9 h-9 rounded-xl bg-[#332522] border border-[#D8C8B8]/20 hover:border-[#D6B56A] hover:text-[#D6B56A] flex items-center justify-center transition-colors cursor-pointer text-[#D8C8B8]"
                 aria-label="Facebook"
               >
                 <Facebook className="w-4 h-4" />
@@ -65,7 +65,7 @@ export const Footer: React.FC<FooterProps> = ({
                 href={`https://wa.me/21655123456`}
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-full bg-[#141414] border border-white/10 hover:border-[#C9A227] hover:text-[#C9A227] flex items-center justify-center transition-colors cursor-pointer"
+                className="w-9 h-9 rounded-xl bg-[#332522] border border-[#D8C8B8]/20 hover:border-[#D6B56A] hover:text-[#D6B56A] flex items-center justify-center transition-colors cursor-pointer text-[#D8C8B8]"
                 aria-label="WhatsApp"
               >
                 <Send className="w-3.5 h-3.5" />
@@ -75,19 +75,19 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Column 2: Navigation & Collections */}
           <div className="text-right space-y-4">
-            <span className="text-xs font-serif font-bold text-[#E8E1D5] uppercase tracking-wider block">
+            <span className="text-xs font-serif font-bold text-[#FFF9F1] uppercase tracking-wider block">
               الأقسام والمجموعات
             </span>
-            <ul className="space-y-2.5 text-xs text-[#ACA394] font-serif">
+            <ul className="space-y-2.5 text-xs text-[#D8C8B8] font-serif">
               <li>
                 <button
                   onClick={() => {
                     onNavigateCategory('الكل');
                     onNavigateView('shop');
                   }}
-                  className="hover:text-[#C9A227] transition-colors"
+                  className="hover:text-[#D6B56A] transition-colors cursor-pointer"
                 >
-                  جميع العطور
+                  جميع العطور والزيوت
                 </button>
               </li>
               <li>
@@ -96,9 +96,9 @@ export const Footer: React.FC<FooterProps> = ({
                     onNavigateCategory('عطور نسائية');
                     onNavigateView('shop');
                   }}
-                  className="hover:text-[#C9A227] transition-colors"
+                  className="hover:text-[#D6B56A] transition-colors cursor-pointer"
                 >
-                  عطور نسائية
+                  تركيبات نسائية
                 </button>
               </li>
               <li>
@@ -107,20 +107,20 @@ export const Footer: React.FC<FooterProps> = ({
                     onNavigateCategory('عطور رجالية');
                     onNavigateView('shop');
                   }}
-                  className="hover:text-[#C9A227] transition-colors"
+                  className="hover:text-[#D6B56A] transition-colors cursor-pointer"
                 >
-                  عطور رجالية
+                  تركيبات رجالية
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => {
-                    onNavigateCategory('عطور فاخرة');
+                    onNavigateCategory('العطور الزيتية');
                     onNavigateView('shop');
                   }}
-                  className="hover:text-[#C9A227] transition-colors"
+                  className="hover:text-[#D6B56A] transition-colors cursor-pointer"
                 >
-                  العطور الفاخرة (Niche)
+                  زيوت عطرية مركزة
                 </button>
               </li>
               <li>
@@ -129,7 +129,7 @@ export const Footer: React.FC<FooterProps> = ({
                     onNavigateCategory('عروض خاصة');
                     onNavigateView('shop');
                   }}
-                  className="hover:text-[#C9A227] transition-colors text-[#C9A227]"
+                  className="hover:text-[#D6B56A] transition-colors text-[#C98F91] cursor-pointer"
                 >
                   العروض والتخفيضات
                 </button>
@@ -139,14 +139,14 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Column 3: Customer Service & Guarantees */}
           <div className="text-right space-y-4">
-            <span className="text-xs font-serif font-bold text-[#E8E1D5] uppercase tracking-wider block">
+            <span className="text-xs font-serif font-bold text-[#FFF9F1] uppercase tracking-wider block">
               خدمة العملاء
             </span>
-            <ul className="space-y-2.5 text-xs text-[#ACA394] font-serif">
+            <ul className="space-y-2.5 text-xs text-[#D8C8B8] font-serif">
               <li>
                 <button
                   onClick={() => onNavigateView('tracking')}
-                  className="hover:text-[#C9A227] transition-colors"
+                  className="hover:text-[#D6B56A] transition-colors cursor-pointer"
                 >
                   تتبع حالة طلبيتك
                 </button>
@@ -154,30 +154,30 @@ export const Footer: React.FC<FooterProps> = ({
               <li>
                 <button
                   onClick={() => onNavigateView('about')}
-                  className="hover:text-[#C9A227] transition-colors"
+                  className="hover:text-[#D6B56A] transition-colors cursor-pointer"
                 >
-                  عن دار لينا شوب
+                  عن دار LINA SHOP
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => onNavigateView('contact')}
-                  className="hover:text-[#C9A227] transition-colors"
+                  className="hover:text-[#D6B56A] transition-colors cursor-pointer"
                 >
                   تواصل معنا
                 </button>
               </li>
               <li>
-                <a href="#faq" className="hover:text-[#C9A227] transition-colors">
+                <a href="#faq" className="hover:text-[#D6B56A] transition-colors">
                   الأسئلة الشائعة
                 </a>
               </li>
               <li>
                 <button
                   onClick={() => onNavigateView('admin')}
-                  className="hover:text-[#C9A227] transition-colors text-neutral-500 hover:text-white text-[11px]"
+                  className="hover:text-[#D6B56A] transition-colors text-[#D8C8B8]/60 hover:text-white text-[11px] cursor-pointer"
                 >
-                  بوابة المشرف
+                  بوابة الإدارة
                 </button>
               </li>
             </ul>
@@ -185,27 +185,27 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Column 4: Contact Info in Tunisia */}
           <div className="text-right space-y-4">
-            <span className="text-xs font-serif font-bold text-[#E8E1D5] uppercase tracking-wider block">
+            <span className="text-xs font-serif font-bold text-[#FFF9F1] uppercase tracking-wider block">
               اتصل بنا في تونس
             </span>
-            <ul className="space-y-3 text-xs text-[#ACA394] font-serif">
+            <ul className="space-y-3 text-xs text-[#D8C8B8] font-serif">
               <li className="flex items-center justify-end gap-2">
                 <span>{storePhone}</span>
-                <Phone className="w-3.5 h-3.5 text-[#C9A227]" />
+                <Phone className="w-3.5 h-3.5 text-[#D6B56A]" />
               </li>
               <li className="flex items-center justify-end gap-2">
                 <span>{storeEmail}</span>
-                <Mail className="w-3.5 h-3.5 text-[#C9A227]" />
+                <Mail className="w-3.5 h-3.5 text-[#D6B56A]" />
               </li>
               <li className="flex items-center justify-end gap-2">
                 <span>{storeAddress}</span>
-                <MapPin className="w-3.5 h-3.5 text-[#C9A227]" />
+                <MapPin className="w-3.5 h-3.5 text-[#D6B56A]" />
               </li>
               <li className="pt-2">
-                <span className="text-[10px] text-[#C9A227] font-serif uppercase block">
+                <span className="text-[10px] text-[#D6B56A] font-serif uppercase block font-bold">
                   التوصيل السريع
                 </span>
-                <span className="text-xs text-[#E8E1D5]">24 إلى 48 ساعة لكامل ولايات تونس</span>
+                <span className="text-xs text-[#FFF9F1]">24 إلى 48 ساعة لكامل ولايات تونس</span>
               </li>
             </ul>
           </div>
@@ -213,14 +213,14 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Bottom Bar: Copyright & Payment Badges */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500 font-serif">
-          <p>© {new Date().getFullYear()} LINA SHOP • HAUTE PARFUMERIE. جميع الحقوق محفوظة في الجمهورية التونسية.</p>
-          <div className="flex items-center gap-4 text-[11px] text-[#ACA394]">
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#D8C8B8]/70 font-serif">
+          <p>© {new Date().getFullYear()} LINA SHOP • تونس. عطور زيتية وتركيبات مستوحاة. جميع الحقوق محفوظة.</p>
+          <div className="flex items-center gap-4 text-[11px] text-[#D8C8B8]">
             <span>الدفع عند الاستلام (COD)</span>
             <span>•</span>
             <span>البريد التونسي D17</span>
             <span>•</span>
-            <span>عطور أصلية 100%</span>
+            <span className="text-[#D6B56A]">تركيبات وزيوت نقية 100%</span>
           </div>
         </div>
 

@@ -4,6 +4,20 @@ export interface PerfumeNote {
   base: string;
 }
 
+export interface ProductSizeOption {
+  size: string; // e.g. "5ml", "10ml", "15ml", "20ml", "30ml", "50ml", "100ml"
+  price: number; // e.g. 5, 8, 12, 16, 22, 35
+  originalPrice?: number;
+}
+
+export interface SizeGuideItem {
+  size: string;
+  title: string;
+  description: string;
+  recommendedFor: string;
+  icon?: string;
+}
+
 export interface Perfume {
   id: number;
   name: string;
@@ -18,11 +32,15 @@ export interface Perfume {
   image: string;
   gallery?: string[];
   sizes?: string[];
+  sizeOptions?: ProductSizeOption[];
+  fragranceType?: string; // e.g. "عطر زيتي مركز", "تركيبة عطرية مستوحاة"
+  inspiredBy?: string; // e.g. "مستوحى من Sauvage", "رائحة مستوحاة من Baccarat Rouge"
   gender?: 'women' | 'men' | 'unisex';
   isSpecialOffer?: boolean;
   isFeatured?: boolean;
   isBestseller?: boolean;
   isNew?: boolean;
+  isMostDemanded?: boolean;
   isActive?: boolean;
   stock?: number;
   sku?: string;
@@ -36,6 +54,7 @@ export interface Perfume {
 export interface CartItem extends Perfume {
   quantity: number;
   selectedSize?: string;
+  selectedSizePrice?: number;
 }
 
 export type PaymentMethod = 'cod' | 'd17';
@@ -133,9 +152,13 @@ export interface HomepageSettings {
   heroPrimaryBtnText: string;
   heroSecondaryBtnText: string;
   brandStatement: string;
+  sizeGuideItems?: SizeGuideItem[];
   sections: {
     hero: boolean;
     brandStatement: boolean;
+    specialOffers: boolean;
+    sizesGuide: boolean;
+    categories: boolean;
     featuredCollection: boolean;
     bestSellers: boolean;
     featuredProduct: boolean;

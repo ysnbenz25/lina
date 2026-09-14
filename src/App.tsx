@@ -7,6 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { FeaturesStrip } from './components/FeaturesStrip';
+import { SpecialOffersSection } from './components/SpecialOffersSection';
+import { SizesGuideSection } from './components/SizesGuideSection';
 import { CategoriesSection } from './components/CategoriesSection';
 import { PerfumesGrid } from './components/PerfumesGrid';
 import { PremiumCollectionBanner } from './components/PremiumCollectionBanner';
@@ -20,8 +22,8 @@ import { CheckoutModal } from './components/CheckoutModal';
 import { OrderTrackingModal } from './components/OrderTrackingModal';
 import { AdminPage } from './components/AdminPage';
 import { Toast } from './components/Toast';
-import { PERFUMES_DATA } from './data/perfumes';
-import { Perfume, CartItem, Order, OrderStatus } from './types';
+import { PERFUMES_DATA, DEFAULT_HOMEPAGE_SETTINGS } from './data/perfumes';
+import { Perfume, CartItem, Order, OrderStatus, HomepageSettings } from './types';
 import { CheckCircle2, Copy, ArrowLeft, Truck } from 'lucide-react';
 
 export default function App() {
@@ -110,6 +112,15 @@ export default function App() {
   const [isAdminPageView, setIsAdminPageView] = useState(false);
   const [latestOrder, setLatestOrder] = useState<Order | null>(null);
   const [trackingSearchCode, setTrackingSearchCode] = useState<string>('');
+
+  // 6. Homepage & Store Settings (LocalStorage backed)
+  const [homepageSettings, setHomepageSettings] = useState<HomepageSettings>(() => {
+    try {
+      const saved = localStorage.getItem('lina_homepage_settings');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_HOMEPAGE_SETTINGS as HomepageSettings;
+  });
 
   // Toast System
   const [toast, setToast] = useState<{ show: boolean; title: string; message: string }>({
@@ -295,6 +306,13 @@ export default function App() {
           orders={orders}
           onUpdateOrderStatus={handleUpdateOrderStatus}
           onBackToStore={() => setIsAdminPageView(false)}
+          homepageSettings={homepageSettings}
+          onUpdateHomepageSettings={(s) => {
+            setHomepageSettings(s);
+            try {
+              localStorage.setItem('lina_homepage_settings', JSON.stringify(s));
+            } catch {}
+          }}
         />
         <Toast show={toast.show} title={toast.title} message={toast.message} />
       </div>
@@ -323,24 +341,47 @@ export default function App() {
 
       <main className="flex-1">
         {/* 2. Hero Section (Split layout, exact headings & description, CTAs, 3 trust indicators) */}
-        <Hero
-          onExplore={scrollToProducts}
-          onShopNow={scrollToProducts}
-        />
+        {homepageSettings.sections?.hero !== false && (
+          <Hero
+            onExplore={scrollToProducts}
+            onShopNow={scrollToProducts}
+            settings={homepageSettings}
+          />
+        )}
 
         {/* 3. Trust Section (Why Lina Shop: 5 pillars with elegant line icons) */}
-        <FeaturesStrip />
+        {homepageSettings.sections?.whyLina !== false && (
+          <FeaturesStrip />
+        )}
+
+        {/* 3.1 Special Offers Section ("عطور بأسعار رمزية") */}
+        {homepageSettings.sections?.specialOffers !== false && (
+          <SpecialOffersSection
+            perfumes={perfumes}
+            onAddToCart={handleAddToCart}
+            onOpenQuickView={(perfume) => setQuickViewPerfume(perfume)}
+          />
+        )}
+
+        {/* 3.2 Sizes Guide Section (دليل الأحجام والاستخدامات) */}
+        {homepageSettings.sections?.sizesGuide !== false && (
+          <SizesGuideSection
+            onSelectSize={() => scrollToProducts()}
+          />
+        )}
 
         {/* 4. Categories Section (Visual category cards) */}
-        <CategoriesSection
-          selectedCategory={selectedCategory}
-          onSelectCategory={(catId) => {
-            setSelectedCategory(catId);
-            scrollToProducts();
-          }}
-        />
+        {homepageSettings.sections?.categories !== false && (
+          <CategoriesSection
+            selectedCategory={selectedCategory}
+            onSelectCategory={(catId) => {
+              setSelectedCategory(catId);
+              scrollToProducts();
+            }}
+          />
+        )}
 
-        {/* 5. Featured Products Section ("الأكثر طلباً" with subtle hover animations, favorites, quick add, view product) */}
+        {/* 5. Featured Products Section ("الأكثر طلباً" with dynamic sizes, quick add, view product) */}
         <PerfumesGrid
           perfumes={perfumes}
           selectedCategory={selectedCategory}
@@ -362,13 +403,17 @@ export default function App() {
         />
 
         {/* 7. Customer Reviews Section (3-5 realistic Tunisian testimonials) */}
-        <CustomerReviews />
+        {homepageSettings.sections?.testimonials !== false && (
+          <CustomerReviews />
+        )}
 
         {/* 8. Brand Heritage Section */}
         <AboutSection />
 
         {/* 9. FAQ Accordion Section (Common questions on authenticity, delivery, COD, tracking, returns) */}
-        <FAQSection />
+        {homepageSettings.sections?.faq !== false && (
+          <FAQSection />
+        )}
       </main>
 
       {/* 10. Luxury Footer (Brand description, navigation links, service links, delivery info, Tunisia contact, copyright) */}

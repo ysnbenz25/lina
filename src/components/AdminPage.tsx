@@ -30,9 +30,11 @@ import {
   Smartphone,
   Laptop,
   Copy,
-  Banknote
+  Banknote,
+  CreditCard
 } from 'lucide-react';
-import { Perfume, Order, OrderStatus } from '../types';
+import { Perfume, Order, OrderStatus, ProductSizeOption, HomepageSettings } from '../types';
+import { DEFAULT_HOMEPAGE_SETTINGS } from '../data/perfumes';
 
 interface AdminPageProps {
   isAdminLoggedIn: boolean;
@@ -46,6 +48,8 @@ interface AdminPageProps {
   orders: Order[];
   onUpdateOrderStatus: (trackingNumber: string, status: OrderStatus) => void;
   onBackToStore: () => void;
+  homepageSettings?: HomepageSettings;
+  onUpdateHomepageSettings?: (settings: HomepageSettings) => void;
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({
@@ -60,13 +64,15 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   orders,
   onUpdateOrderStatus,
   onBackToStore,
+  homepageSettings,
+  onUpdateHomepageSettings,
 }) => {
   // Password Authentication
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(false);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<'catalog' | 'editor' | 'inspection' | 'orders'>('catalog');
+  const [activeTab, setActiveTab] = useState<'catalog' | 'editor' | 'inspection' | 'orders' | 'settings'>('catalog');
 
   // Search in catalog
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,14 +91,41 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   const [formPrice, setFormPrice] = useState('');
   const [formOriginalPrice, setFormOriginalPrice] = useState('');
   const [formBadge, setFormBadge] = useState('إصدار فاخر بتونس');
-  const [formCategory, setFormCategory] = useState('عطور النيش');
-  const [formVolume, setFormVolume] = useState('100 ml - Extrait de Parfum');
+  const [formCategory, setFormCategory] = useState('عطور رجالية');
+  const [formVolume, setFormVolume] = useState('30 ml (متوفر من 5ml إلى 100ml)');
+  const [formFragranceType, setFormFragranceType] = useState('تركيبة عطرية مستوحاة');
+  const [formInspiredBy, setFormInspiredBy] = useState('');
+  const [formGender, setFormGender] = useState<'men' | 'women' | 'unisex'>('men');
   const [formDescription, setFormDescription] = useState('');
   const [formTopNote, setFormTopNote] = useState('');
   const [formHeartNote, setFormHeartNote] = useState('');
   const [formBaseNote, setFormBaseNote] = useState('');
   const [formInStock, setFormInStock] = useState(true);
   const [formBatchCode, setFormBatchCode] = useState('');
+
+  // Multi-sizes dynamic state in editor
+  const [formSizes, setFormSizes] = useState<ProductSizeOption[]>([
+    { size: '5ml', price: 5, originalPrice: 7 },
+    { size: '10ml', price: 8, originalPrice: 12 },
+    { size: '20ml', price: 12, originalPrice: 16 },
+    { size: '30ml', price: 16, originalPrice: 22 },
+    { size: '50ml', price: 22, originalPrice: 30 },
+    { size: '100ml', price: 35, originalPrice: 48 },
+  ]);
+  const [newSizeName, setNewSizeName] = useState('');
+  const [newSizePrice, setNewSizePrice] = useState('');
+  const [newSizeOriginalPrice, setNewSizeOriginalPrice] = useState('');
+
+  // Homepage Settings Local State
+  const [siteSettings, setSiteSettings] = useState<HomepageSettings>(() => {
+    if (homepageSettings) return homepageSettings;
+    try {
+      const stored = localStorage.getItem('lina_homepage_settings');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return DEFAULT_HOMEPAGE_SETTINGS as HomepageSettings;
+  });
+  const [settingsSavedSuccess, setSettingsSavedSuccess] = useState(false);
 
   // Image upload options: 'file' | 'url'
   const [imageInputMode, setImageInputMode] = useState<'file' | 'url'>('url');
@@ -133,11 +166,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({
       .catch(() => {});
   }, []);
 
-  const handleSaveD17Phone = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveD17Phone = async (e?: React.FormEvent, customPhone?: string) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
     setIsUpdatingD17(true);
     setD17SuccessMsg(null);
-    const cleanPhone = d17AdminPhone.trim();
+    const cleanPhone = (customPhone !== undefined ? customPhone : d17AdminPhone).trim();
 
     // 1. Immediately persist to localStorage so it works everywhere (Vercel, offline, etc.)
     try {
@@ -226,17 +261,28 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     setEditingPerfumeId(null);
     setFormArabicName('');
     setFormName('');
-    setFormPrice('');
-    setFormOriginalPrice('');
-    setFormBadge('إصدار فاخر بتونس');
-    setFormCategory('عطور النيش');
-    setFormVolume('100 ml - Extrait de Parfum');
-    setFormDescription('');
-    setFormTopNote('زهر البرتقال التونسي الفاخر، برغموت ناصع');
-    setFormHeartNote('أزهار السوسن الملكية، خشب الصندل');
-    setFormBaseNote('عنبر ملكي، مسك أبيض خالص');
+    setFormPrice('16');
+    setFormOriginalPrice('22');
+    setFormBadge('الأكثر طلباً');
+    setFormCategory('عطور رجالية');
+    setFormVolume('30 ml (متوفر من 5ml إلى 100ml)');
+    setFormFragranceType('تركيبة عطرية مستوحاة');
+    setFormInspiredBy('');
+    setFormGender('men');
+    setFormDescription('تركيبة مستوحاة بدقة فائقة من الرائحة العالمية الشهيرة مع ثبات عالي وفوحان استثنائي.');
+    setFormTopNote('برغموت إيطالي منعش، زهر الليمون');
+    setFormHeartNote('أزهار ناعمة، خشب الأرز، بهارات خفيفة');
+    setFormBaseNote('مسك أبيض فاخر، عنبر دافئ');
     setFormInStock(true);
     setFormBatchCode(`TN-${Math.floor(1000 + Math.random() * 9000)}`);
+    setFormSizes([
+      { size: '5ml', price: 5, originalPrice: 7 },
+      { size: '10ml', price: 8, originalPrice: 12 },
+      { size: '20ml', price: 12, originalPrice: 16 },
+      { size: '30ml', price: 16, originalPrice: 22 },
+      { size: '50ml', price: 22, originalPrice: 30 },
+      { size: '100ml', price: 35, originalPrice: 48 },
+    ]);
     setFormImageUrl('');
     setImagePreview('');
     setImageInputMode('url');
@@ -251,15 +297,30 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     setFormName(perfume.name);
     setFormPrice(perfume.price.toString());
     setFormOriginalPrice(perfume.originalPrice ? perfume.originalPrice.toString() : '');
-    setFormBadge(perfume.badge || 'عطر فاخر');
-    setFormCategory(perfume.category || 'عطور النيش');
-    setFormVolume(perfume.volume || '100 ml - Extrait de Parfum');
+    setFormBadge(perfume.badge || 'الأكثر طلباً');
+    setFormCategory(perfume.category || 'عطور رجالية');
+    setFormVolume(perfume.volume || '30 ml (متوفر من 5ml إلى 100ml)');
+    setFormFragranceType(perfume.fragranceType || 'تركيبة عطرية مستوحاة');
+    setFormInspiredBy(perfume.inspiredBy || '');
+    setFormGender((perfume.gender as any) || 'unisex');
     setFormDescription(perfume.description || '');
     setFormTopNote(perfume.notes?.top || '');
     setFormHeartNote(perfume.notes?.heart || '');
     setFormBaseNote(perfume.notes?.base || '');
     setFormInStock(perfume.inStock !== false);
     setFormBatchCode(perfume.batchCode || `TN-${Math.floor(1000 + Math.random() * 9000)}`);
+    if (perfume.sizeOptions && perfume.sizeOptions.length > 0) {
+      setFormSizes([...perfume.sizeOptions]);
+    } else {
+      setFormSizes([
+        { size: '5ml', price: 5, originalPrice: 7 },
+        { size: '10ml', price: 8, originalPrice: 12 },
+        { size: '20ml', price: 12, originalPrice: 16 },
+        { size: '30ml', price: perfume.price, originalPrice: perfume.originalPrice || perfume.price + 6 },
+        { size: '50ml', price: 22, originalPrice: 30 },
+        { size: '100ml', price: 35, originalPrice: 48 },
+      ]);
+    }
     setFormImageUrl(perfume.image || '');
     setImagePreview(perfume.image || '');
     setImageInputMode(perfume.image?.startsWith('data:') ? 'file' : 'url');
@@ -348,15 +409,15 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         id: editingPerfumeId,
         name: formName.trim() || existing?.name || 'Lina Luxury Scent',
         arabicName: formArabicName.trim(),
-        badge: formBadge.trim() || 'إصدار فاخر',
+        badge: formBadge.trim() || 'الأكثر طلباً',
         category: formCategory,
         price: priceNum,
         originalPrice: origPriceNum,
-        volume: formVolume.trim() || '100 ml - Extrait de Parfum',
+        volume: formVolume.trim() || '30 ml (متوفر من 5ml إلى 100ml)',
         rating: existing?.rating || 4.9,
         reviewsCount: existing?.reviewsCount || 10,
         image: formImageUrl.trim(),
-        description: formDescription.trim() || 'عطر فاخر مصنوع بنوتات نادرة تدوم طويلاً.',
+        description: formDescription.trim() || 'تركيبة عطرية مستوحاة بدقة فائقة من أشهر الروائح مع ثبات يدوم طويلاً.',
         notes: {
           top: formTopNote.trim() || 'نوتات منعشة',
           heart: formHeartNote.trim() || 'أزهار نقية',
@@ -364,6 +425,11 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         },
         inStock: formInStock,
         batchCode: formBatchCode.trim() || `TN-${Math.floor(1000 + Math.random() * 9000)}`,
+        sizes: formSizes.map((s) => s.size),
+        sizeOptions: formSizes,
+        fragranceType: formFragranceType,
+        inspiredBy: formInspiredBy.trim() || undefined,
+        gender: formGender,
       };
 
       onUpdatePerfume(updated);
@@ -373,24 +439,29 @@ export const AdminPage: React.FC<AdminPageProps> = ({
       // Add New Perfume
       const newPerfume: Perfume = {
         id: Date.now(),
-        name: formName.trim() || 'Lina Special Edition',
+        name: formName.trim() || 'Lina Fragrance Edition',
         arabicName: formArabicName.trim(),
-        badge: formBadge.trim() || 'إصدار فاخر بتونس',
+        badge: formBadge.trim() || 'جديد',
         category: formCategory,
         price: priceNum,
         originalPrice: origPriceNum,
-        volume: formVolume.trim() || '100 ml - Extrait de Parfum',
+        volume: formVolume.trim() || '30 ml (متوفر من 5ml إلى 100ml)',
         rating: 5.0,
         reviewsCount: 1,
         image: formImageUrl.trim(),
-        description: formDescription.trim() || 'عطر فاخر أصيل تم ابتكاره ليعكس الفخامة والحضور الآسر.',
+        description: formDescription.trim() || 'تركيبة عطرية مستوحاة بدقة فائقة من أشهر الروائح مع ثبات يدوم طويلاً.',
         notes: {
-          top: formTopNote.trim() || 'زهر البرتقال التونسي، برغموت ناصع',
-          heart: formHeartNote.trim() || 'أزهار السوسن الملكية، ياسمين',
-          base: formBaseNote.trim() || 'عنبر ملكي، مسك أبيض نقي',
+          top: formTopNote.trim() || 'برغموت منعش، زهر الليمون',
+          heart: formHeartNote.trim() || 'أزهار نقية، خشب الأرز',
+          base: formBaseNote.trim() || 'عنبر ملكي، مسك أبيض خالص',
         },
         inStock: formInStock,
         batchCode: formBatchCode.trim() || `TN-${Math.floor(1000 + Math.random() * 9000)}`,
+        sizes: formSizes.map((s) => s.size),
+        sizeOptions: formSizes,
+        fragranceType: formFragranceType,
+        inspiredBy: formInspiredBy.trim() || undefined,
+        gender: formGender,
       };
 
       onAddPerfume(newPerfume);
@@ -592,6 +663,18 @@ export const AdminPage: React.FC<AdminPageProps> = ({
           >
             <ShoppingBag className="w-4 h-4" />
             <span>طلبيات تونس ({orders.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+              activeTab === 'settings'
+                ? 'bg-[#d4af37] text-[#08080a] shadow-sm'
+                : 'text-neutral-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Sliders className="w-4 h-4" />
+            <span>إعدادات المتجر ونصوص الموقع</span>
           </button>
         </div>
       </header>
@@ -1044,7 +1127,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 mb-1">
                       التصنيف *
@@ -1054,10 +1137,42 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                       onChange={(e) => setFormCategory(e.target.value)}
                       className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-sm focus:border-[#d4af37] focus:outline-none transition-colors cursor-pointer"
                     >
+                      <option value="عطور رجالية" className="bg-[#101014]">عطور رجالية</option>
+                      <option value="عطور نسائية" className="bg-[#101014]">عطور نسائية</option>
+                      <option value="عطور للجنسين" className="bg-[#101014]">عطور للجنسين</option>
+                      <option value="العطور الزيتية" className="bg-[#101014]">العطور الزيتية</option>
                       <option value="عطور النيش" className="bg-[#101014]">عطور النيش</option>
-                      <option value="العطور الفاخرة" className="bg-[#101014]">العطور الفاخرة</option>
-                      <option value="العطور اليومية الراقية" className="bg-[#101014]">العطور اليومية الراقية</option>
-                      <option value="عطور حصرية" className="bg-[#101014]">عطور حصرية</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                      الجنس المستهدف
+                    </label>
+                    <select
+                      value={formGender}
+                      onChange={(e) => setFormGender(e.target.value as any)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-sm focus:border-[#d4af37] focus:outline-none transition-colors cursor-pointer"
+                    >
+                      <option value="men" className="bg-[#101014]">رجالي (Men)</option>
+                      <option value="women" className="bg-[#101014]">نسائي (Women)</option>
+                      <option value="unisex" className="bg-[#101014]">للجنسين (Unisex)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                      نوع المستحضر العطري
+                    </label>
+                    <select
+                      value={formFragranceType}
+                      onChange={(e) => setFormFragranceType(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-sm focus:border-[#d4af37] focus:outline-none transition-colors cursor-pointer"
+                    >
+                      <option value="تركيبة عطرية مستوحاة" className="bg-[#101014]">تركيبة عطرية مستوحاة</option>
+                      <option value="عطر زيتي مركز" className="bg-[#101014]">عطر زيتي مركز</option>
+                      <option value="مسك مركز نقي" className="bg-[#101014]">مسك مركز نقي</option>
+                      <option value="عطر بخاخ مخفف" className="bg-[#101014]">عطر بخاخ مخفف</option>
                     </select>
                   </div>
 
@@ -1069,22 +1184,40 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                       type="text"
                       value={formBadge}
                       onChange={(e) => setFormBadge(e.target.value)}
-                      placeholder="مثال: الأكثر مبيعاً بتونس"
+                      placeholder="مثال: الأكثر طلباً، عرض خاص، جديد"
                       className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-sm focus:border-[#d4af37] focus:outline-none transition-colors"
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                      الرائحة المستوحاة (الشفافية للمشتري)
+                    </label>
+                    <input
+                      type="text"
+                      value={formInspiredBy}
+                      onChange={(e) => setFormInspiredBy(e.target.value)}
+                      placeholder="مثال: رائحة مستوحاة من Sauvage الشهير أو Baccarat Rouge"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-sm focus:border-[#d4af37] focus:outline-none transition-colors"
+                    />
+                    <span className="text-[10px] text-neutral-400 mt-1 block">
+                      * يرجى استخدام صياغات شفافة مثل: "تركيبة مستوحاة من..." أو "رائحة مستوحاة من..."
+                    </span>
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 mb-1">
-                      الحجم والتركيز
+                      نص السعة المعروض
                     </label>
                     <input
                       type="text"
                       value={formVolume}
                       onChange={(e) => setFormVolume(e.target.value)}
-                      placeholder="100 ml - Extrait de Parfum"
-                      dir="ltr"
-                      className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-sm focus:border-[#d4af37] focus:outline-none transition-colors text-left"
+                      placeholder="30 ml (متوفر من 5ml إلى 100ml)"
+                      dir="rtl"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-sm focus:border-[#d4af37] focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -1094,13 +1227,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-[#d4af37] flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
-                  <span>التسعير بالدينار التونسي (د.ت) وحالة المخزون</span>
+                  <span>السعر الافتراضي وحالة المخزون</span>
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 mb-1">
-                      سعر البيع (د.ت) *
+                      سعر البيع الافتراضي (د.ت) *
                     </label>
                     <div className="relative">
                       <input
@@ -1109,7 +1242,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                         step="0.1"
                         value={formPrice}
                         onChange={(e) => setFormPrice(e.target.value)}
-                        placeholder="250"
+                        placeholder="16"
                         className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-sm focus:border-[#d4af37] focus:outline-none transition-colors font-sans"
                       />
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">
@@ -1128,7 +1261,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                         step="0.1"
                         value={formOriginalPrice}
                         onChange={(e) => setFormOriginalPrice(e.target.value)}
-                        placeholder="310"
+                        placeholder="22"
                         className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-sm focus:border-[#d4af37] focus:outline-none transition-colors font-sans"
                       />
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">
@@ -1152,6 +1285,146 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                     >
                       <span className={`w-2 h-2 rounded-full ${formInStock ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                       <span>{formInStock ? 'متوفر للطلب المباشر' : 'غير متوفر (نفد مؤقتاً)'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3.1 Dynamic Multiple Sizes & Prices Section */}
+                <div className="p-4 rounded-2xl bg-[#0c0c10] border border-white/10 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-[#d4af37]" />
+                        <span>إدارة الأحجام المتعددة والأسعار لهذا العطر ({formSizes.length} أحجام)</span>
+                      </h4>
+                      <p className="text-[11px] text-neutral-400 mt-0.5">
+                        يتيح للزبون التونسي اختيار الحجم المناسب (من 5ml إلى 100ml) وسيتغير السعر تلقائياً
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormSizes([
+                          { size: '5ml', price: 5, originalPrice: 7 },
+                          { size: '10ml', price: 8, originalPrice: 12 },
+                          { size: '20ml', price: 12, originalPrice: 16 },
+                          { size: '30ml', price: parseFloat(formPrice) || 16, originalPrice: parseFloat(formOriginalPrice) || 22 },
+                          { size: '50ml', price: 22, originalPrice: 30 },
+                          { size: '100ml', price: 35, originalPrice: 48 },
+                        ]);
+                      }}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-[#d4af37]/15 text-[#d4af37] hover:bg-[#d4af37] hover:text-black font-semibold transition-colors border border-[#d4af37]/30 self-start sm:self-auto cursor-pointer"
+                    >
+                      تعبئة الأحجام القياسية (5, 10, 20, 30, 50, 100ml)
+                    </button>
+                  </div>
+
+                  {/* Size List */}
+                  <div className="space-y-2">
+                    {formSizes.map((s, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-[#14141c] border border-white/5"
+                      >
+                        <span className="w-16 px-2 py-1 rounded bg-[#d4af37]/20 text-[#d4af37] text-xs font-bold text-center">
+                          {s.size}
+                        </span>
+
+                        <div className="flex items-center gap-2 flex-1">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-neutral-400">السعر:</span>
+                            <input
+                              type="number"
+                              step="0.5"
+                              value={s.price}
+                              onChange={(e) => {
+                                const newPrice = parseFloat(e.target.value) || 0;
+                                setFormSizes((prev) =>
+                                  prev.map((item, i) => (i === idx ? { ...item, price: newPrice } : item))
+                                );
+                              }}
+                              className="w-20 px-2 py-1 rounded bg-[#08080a] border border-white/10 text-white text-xs font-mono text-center"
+                            />
+                            <span className="text-[10px] text-neutral-400">د.ت</span>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-neutral-400">السعر القديم:</span>
+                            <input
+                              type="number"
+                              step="0.5"
+                              value={s.originalPrice || ''}
+                              placeholder="اختياري"
+                              onChange={(e) => {
+                                const newOrig = e.target.value ? parseFloat(e.target.value) : undefined;
+                                setFormSizes((prev) =>
+                                  prev.map((item, i) => (i === idx ? { ...item, originalPrice: newOrig } : item))
+                                );
+                              }}
+                              className="w-20 px-2 py-1 rounded bg-[#08080a] border border-white/10 text-white text-xs font-mono text-center"
+                            />
+                            <span className="text-[10px] text-neutral-400">د.ت</span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setFormSizes((prev) => prev.filter((_, i) => i !== idx))}
+                          className="p-1.5 text-neutral-500 hover:text-red-400 transition-colors"
+                          title="حذف هذا الحجم"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add New Size Custom Row */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
+                    <input
+                      type="text"
+                      placeholder="اسم الحجم (مثال: 15ml)"
+                      value={newSizeName}
+                      onChange={(e) => setNewSizeName(e.target.value)}
+                      className="w-32 px-3 py-1.5 rounded-lg bg-[#08080a] border border-white/10 text-white text-xs"
+                    />
+                    <input
+                      type="number"
+                      step="0.5"
+                      placeholder="السعر (د.ت)"
+                      value={newSizePrice}
+                      onChange={(e) => setNewSizePrice(e.target.value)}
+                      className="w-24 px-3 py-1.5 rounded-lg bg-[#08080a] border border-white/10 text-white text-xs"
+                    />
+                    <input
+                      type="number"
+                      step="0.5"
+                      placeholder="السعر القديم (د.ت)"
+                      value={newSizeOriginalPrice}
+                      onChange={(e) => setNewSizeOriginalPrice(e.target.value)}
+                      className="w-28 px-3 py-1.5 rounded-lg bg-[#08080a] border border-white/10 text-white text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!newSizeName.trim() || !newSizePrice) return;
+                        setFormSizes((prev) => [
+                          ...prev,
+                          {
+                            size: newSizeName.trim(),
+                            price: parseFloat(newSizePrice),
+                            originalPrice: newSizeOriginalPrice ? parseFloat(newSizeOriginalPrice) : undefined,
+                          },
+                        ]);
+                        setNewSizeName('');
+                        setNewSizePrice('');
+                        setNewSizeOriginalPrice('');
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-[#d4af37] text-black font-bold text-xs hover:bg-[#e5ca78] transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>إضافة الحجم</span>
                     </button>
                   </div>
                 </div>
@@ -1743,6 +2016,269 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 5: Store & Homepage Settings (نصوص وإعدادات المتجر) */}
+        {/* ========================================================= */}
+        {activeTab === 'settings' && (
+          <div className="space-y-8">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-[#101014] border border-white/10">
+              <div>
+                <h2 className="text-xl font-bold font-serif text-white flex items-center gap-2.5">
+                  <Sliders className="w-5 h-5 text-[#d4af37]" />
+                  <span>إعدادات المتجر ونصوص الواجهة الرئيسية</span>
+                </h2>
+                <p className="text-xs text-neutral-400 mt-1">
+                  تحكم كامل في إظهار أو إخفاء أقسام الموقع، وتعديل النصوص الترويجية، وضبط أرقام التواصل ودفع D17.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    localStorage.setItem('lina_homepage_settings', JSON.stringify(siteSettings));
+                    onUpdateHomepageSettings?.(siteSettings);
+                    setSettingsSavedSuccess(true);
+                    setTimeout(() => setSettingsSavedSuccess(false), 3500);
+                  } catch {
+                    alert('تعذر حفظ الإعدادات');
+                  }
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-[#d4af37] to-[#b89428] hover:from-[#e5ca78] hover:to-[#d4af37] text-black font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              >
+                <Check className="w-4 h-4" />
+                <span>حفظ كافة التغييرات</span>
+              </button>
+            </div>
+
+            {settingsSavedSuccess && (
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-2 animate-fadeIn">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>تم حفظ إعدادات الصفحة الرئيسية ونصوص المتجر بنجاح وتطبيقها على الفور!</span>
+              </div>
+            )}
+
+            {/* 1. Sections Visibility */}
+            <div className="p-6 rounded-2xl bg-[#101014] border border-white/10 space-y-4">
+              <h3 className="text-sm font-bold text-[#d4af37] flex items-center gap-2">
+                <Layers className="w-4 h-4" />
+                <span>التحكم في ظهور أقسام الصفحة الرئيسية</span>
+              </h3>
+              <p className="text-xs text-neutral-400">
+                يمكنك تفعيل أو تعطيل أي قسم من واجهة المتجر بنقرة واحدة:
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+                {[
+                  { key: 'hero', label: 'الواجهة الافتتاحية (Hero Banner)' },
+                  { key: 'specialOffers', label: 'قسم العروض الخاصة والأسعار الرمزية' },
+                  { key: 'sizesGuide', label: 'دليل الأحجام والاستخدامات' },
+                  { key: 'whyLina', label: 'مميزات لينا شوب والضمانات (Features)' },
+                  { key: 'categories', label: 'شريط تصنيفات العطور' },
+                  { key: 'testimonials', label: 'آراء وتقييمات الحرفاء' },
+                  { key: 'faq', label: 'الأسئلة المتكررة (FAQ)' },
+                ].map((sec) => {
+                  const isEnabled = (siteSettings.sections as any)?.[sec.key] !== false;
+                  return (
+                    <button
+                      key={sec.key}
+                      type="button"
+                      onClick={() => {
+                        setSiteSettings((prev) => ({
+                          ...prev,
+                          sections: {
+                            ...prev.sections,
+                            [sec.key]: !isEnabled,
+                          },
+                        }));
+                      }}
+                      className={`p-3.5 rounded-xl border text-right transition-all flex items-center justify-between ${
+                        isEnabled
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-white'
+                          : 'bg-white/[0.02] border-white/5 text-neutral-500'
+                      }`}
+                    >
+                      <span className="text-xs font-semibold">{sec.label}</span>
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                          isEnabled ? 'bg-emerald-400/20 text-emerald-300' : 'bg-white/10 text-neutral-400'
+                        }`}
+                      >
+                        {isEnabled ? 'مفعّل' : 'معطّل'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Hero Section Texts */}
+            <div className="p-6 rounded-2xl bg-[#101014] border border-white/10 space-y-4">
+              <h3 className="text-sm font-bold text-[#d4af37] flex items-center gap-2">
+                <Edit3 className="w-4 h-4" />
+                <span>نصوص الواجهة الرئيسية (Hero Section)</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    العنوان الرئيسي للواجهة
+                  </label>
+                  <input
+                    type="text"
+                    value={siteSettings.heroTitle || ''}
+                    onChange={(e) => setSiteSettings((prev) => ({ ...prev, heroTitle: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-xs focus:border-[#d4af37] focus:outline-none"
+                    placeholder="عطورك المفضلة... بأسعار تحبها"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    العنوان الفرعي
+                  </label>
+                  <input
+                    type="text"
+                    value={siteSettings.heroSubtitle || ''}
+                    onChange={(e) => setSiteSettings((prev) => ({ ...prev, heroSubtitle: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-xs focus:border-[#d4af37] focus:outline-none"
+                    placeholder="عطور زيتية وتركيبات مستوحاة من أشهر الروائح"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                  النص الوصفي الترويجي
+                </label>
+                <textarea
+                  rows={2}
+                  value={siteSettings.heroDescription || ''}
+                  onChange={(e) => setSiteSettings((prev) => ({ ...prev, heroDescription: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-xs focus:border-[#d4af37] focus:outline-none"
+                  placeholder="عطور زيتية وتركيبات مستوحاة من أشهر الروائح بأحجام مختلفة وأسعار رمزية تناسب الجميع في تونس..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    الشارة العلوية (Badge)
+                  </label>
+                  <input
+                    type="text"
+                    value={siteSettings.heroBadge || ''}
+                    onChange={(e) => setSiteSettings((prev) => ({ ...prev, heroBadge: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-xs focus:border-[#d4af37] focus:outline-none"
+                    placeholder="عطور زيتية وتركيبات مستوحاة • من 5ml إلى 100ml"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    رابط صورة البانر الرئيسي
+                  </label>
+                  <input
+                    type="text"
+                    dir="ltr"
+                    value={siteSettings.heroImage || ''}
+                    onChange={(e) => setSiteSettings((prev) => ({ ...prev, heroImage: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-xs focus:border-[#d4af37] focus:outline-none font-mono"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Payment & Support Contact */}
+            <div className="p-6 rounded-2xl bg-[#101014] border border-white/10 space-y-4">
+              <h3 className="text-sm font-bold text-[#d4af37] flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                <span>إعدادات الدفع ورقم D17 والتواصل</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-neutral-300">
+                      رقم هاتف تحويل D17 المعتمد
+                    </label>
+                    {d17SuccessMsg && (
+                      <span className="text-[10px] text-emerald-400 font-semibold animate-pulse">
+                        ✓ {d17SuccessMsg}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      dir="ltr"
+                      value={d17AdminPhone}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setD17AdminPhone(val);
+                        try {
+                          localStorage.setItem('lina_d17_phone', val);
+                        } catch {}
+                      }}
+                      placeholder="+216 55 889 900"
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-xs focus:border-[#d4af37] focus:outline-none font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleSaveD17Phone()}
+                      disabled={isUpdatingD17}
+                      className="px-3.5 py-2.5 bg-[#d4af37] hover:bg-[#e5ca78] text-black font-bold text-xs rounded-xl transition-all shrink-0 cursor-pointer disabled:opacity-50"
+                    >
+                      {isUpdatingD17 ? 'جاري...' : 'حفظ الرقم'}
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-neutral-400 mt-1 block">
+                    يظهر تلقائياً للحرفاء في صفحة إتمام الطلب عند اختيار طريقة الدفع D17.
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    رقم هاتف المتجر الرسمي / الواتساب
+                  </label>
+                  <input
+                    type="text"
+                    dir="ltr"
+                    value={siteSettings.contactPhone || '+216 55 889 900'}
+                    onChange={(e) => setSiteSettings((prev) => ({ ...prev, contactPhone: e.target.value }))}
+                    placeholder="+216 55 889 900"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#08080a] border border-white/10 text-white text-xs focus:border-[#d4af37] focus:outline-none font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Save Action */}
+            <div className="flex justify-end pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    localStorage.setItem('lina_homepage_settings', JSON.stringify(siteSettings));
+                    onUpdateHomepageSettings?.(siteSettings);
+                    handleSaveD17Phone();
+                    setSettingsSavedSuccess(true);
+                    setTimeout(() => setSettingsSavedSuccess(false), 3500);
+                  } catch {
+                    alert('تعذر حفظ الإعدادات');
+                  }
+                }}
+                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#d4af37] to-[#b89428] hover:from-[#e5ca78] hover:to-[#d4af37] text-black font-bold text-sm rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Check className="w-4 h-4" />
+                <span>حفظ وتطبيق إعدادات الموقع بالكامل</span>
+              </button>
+            </div>
           </div>
         )}
 

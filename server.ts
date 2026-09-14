@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
+import fs from 'fs';
 import crypto from 'crypto';
 import { createServer as createViteServer } from 'vite';
 import { z } from 'zod';
@@ -299,12 +300,41 @@ const CheckoutRequestSchema = z.object({
 // 5. SERVER-SIDE DATA STORAGE & CONFIGURATION
 // =========================================================================
 
-// Configurable D17 settings (can be modified by admin)
-let d17Settings = {
-  recipientPhone: '+216 55 889 900',
-  recipientName: 'Lina Shop - متجر لينا للعطور',
-  instructions: 'يرجى فتح تطبيق D17 التابع للبريد التونسي، واختيار "تحويل أموال"، ثم إدخال رقم الهاتف وإتمام المعاملة، ونسخ رقم العملية هنا.'
-};
+// Configurable D17 settings (persistent via file + optional Cloud SQL fallback)
+const D17_SETTINGS_FILE = path.join(process.cwd(), 'd17_settings.json');
+
+function loadD17SettingsFromDisk() {
+  try {
+    if (fs.existsSync(D17_SETTINGS_FILE)) {
+      const content = fs.readFileSync(D17_SETTINGS_FILE, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed.recipientPhone === 'string' && parsed.recipientPhone.trim()) {
+        return {
+          recipientPhone: parsed.recipientPhone.trim(),
+          recipientName: parsed.recipientName || 'Lina Shop - متجر لينا للعطور',
+          instructions: parsed.instructions || 'يرجى فتح تطبيق D17 التابع للبريد التونسي، واختيار "تحويل أموال"، ثم إدخال رقم الهاتف وإتمام المعاملة، ونسخ رقم العملية هنا.'
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load d17 settings from disk:', err);
+  }
+  return {
+    recipientPhone: '+216 55 889 900',
+    recipientName: 'Lina Shop - متجر لينا للعطور',
+    instructions: 'يرجى فتح تطبيق D17 التابع للبريد التونسي، واختيار "تحويل أموال"، ثم إدخال رقم الهاتف وإتمام المعاملة، ونسخ رقم العملية هنا.'
+  };
+}
+
+function saveD17SettingsToDisk(settings: { recipientPhone: string; recipientName: string; instructions: string }) {
+  try {
+    fs.writeFileSync(D17_SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('Failed to save d17 settings to disk:', err);
+  }
+}
+
+let d17Settings = loadD17SettingsFromDisk();
 
 // In-Memory persistent store for products (seeded with authentic perfumes)
 let serverProducts = [...PERFUMES_DATA];
@@ -601,9 +631,12 @@ app.get('/api/settings/d17', generalRateLimiter, async (_req: Request, res: Resp
       d17Settings.recipientPhone = latestDbSetting[0].recipientPhone;
       d17Settings.recipientName = latestDbSetting[0].recipientName;
       d17Settings.instructions = latestDbSetting[0].instructions;
+    } else {
+      d17Settings = loadD17SettingsFromDisk();
     }
   } catch (err) {
-    console.warn('Could not query d17SettingsTable from Cloud SQL:', err);
+    // Cloud SQL might not be connected yet; load from local disk
+    d17Settings = loadD17SettingsFromDisk();
   }
 
   res.json({
@@ -634,6 +667,9 @@ app.patch('/api/settings/d17', generalRateLimiter, async (req: Request, res: Res
     d17Settings.instructions = sanitizeText(instructions);
   }
 
+  // Persist to disk immediately
+  saveD17SettingsToDisk(d17Settings);
+
   try {
     await db.insert(d17SettingsTable).values({
       recipientPhone: d17Settings.recipientPhone,
@@ -641,7 +677,7 @@ app.patch('/api/settings/d17', generalRateLimiter, async (req: Request, res: Res
       instructions: d17Settings.instructions,
     });
   } catch (dbErr) {
-    console.warn('Could not insert d17Settings to Cloud SQL:', dbErr);
+    // Cloud SQL optional fallback
   }
 
   res.json({

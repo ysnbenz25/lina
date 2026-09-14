@@ -33,19 +33,19 @@ export const CustomerReviews: React.FC = () => {
   ];
 
   return (
-    <section id="reviews" className="py-24 sm:py-32 bg-[#0A0A0A] border-b border-white/5">
+    <section id="reviews" className="py-24 sm:py-32 bg-[#F7F1E8] border-b border-[#D8C8B8]/40 text-[#241B18]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="text-center mb-16 space-y-3">
-          <span className="font-serif text-[11px] tracking-[0.35em] text-[#C9A227] uppercase block">
-            AVIS DE NOS CLIENTS
+          <span className="font-serif text-[11px] tracking-[0.35em] text-[#722F3F] uppercase block font-bold">
+            AVIS DE NOS CLIENTS • آراء العملاء
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#E8E1D5] font-bold tracking-tight">
-            ماذا يقول عملاؤنا؟
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#241B18] font-bold tracking-tight">
+            ماذا يقول عملاؤنا في تونس؟
           </h2>
-          <p className="text-xs sm:text-sm text-[#ACA394] font-serif max-w-md mx-auto">
-            أكثر من 4,200 زبون يثقون في عطورنا في كامل الجمهورية التونسية
+          <p className="text-xs sm:text-sm text-[#57413C] font-serif max-w-md mx-auto">
+            أكثر من 4,200 زبون يثقون في عطورنا وتركيباتنا في كامل تراب الجمهورية التونسية
           </p>
         </div>
 
@@ -54,36 +54,36 @@ export const CustomerReviews: React.FC = () => {
           {reviews.map((rev) => (
             <div
               key={rev.id}
-              className="p-8 bg-[#111111] border border-white/5 hover:border-[#C9A227]/30 transition-all duration-300 flex flex-col justify-between text-right relative"
+              className="p-8 bg-[#FFF9F1] border border-[#D8C8B8]/60 hover:border-[#722F3F]/40 transition-all duration-300 flex flex-col justify-between text-right relative rounded-2xl shadow-sm hover:shadow-md"
             >
-              <Quote className="w-8 h-8 text-white/5 absolute top-6 left-6" />
+              <Quote className="w-10 h-10 text-[#722F3F]/10 absolute top-6 left-6" />
 
               <div className="space-y-4">
                 {/* 5 Stars */}
-                <div className="flex items-center gap-1 text-[#C9A227]">
+                <div className="flex items-center gap-1 text-[#D6B56A]">
                   {[...Array(rev.rating)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                    <Star key={i} className="w-4 h-4 fill-current" />
                   ))}
                 </div>
 
-                <p className="text-xs sm:text-sm text-[#E8E1D5] leading-relaxed font-serif font-light">
+                <p className="text-xs sm:text-sm text-[#241B18] leading-relaxed font-serif font-normal">
                   "{rev.comment}"
                 </p>
               </div>
 
               {/* Author and verified purchase */}
-              <div className="mt-8 pt-4 border-t border-white/5 flex items-center justify-between">
+              <div className="mt-8 pt-4 border-t border-[#D8C8B8]/40 flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-serif font-bold text-[#E8E1D5]">{rev.name}</span>
-                    <CheckCircle2 className="w-3 h-3 text-[#C9A227]" />
+                    <span className="text-xs font-serif font-bold text-[#241B18]">{rev.name}</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#722F3F]" />
                   </div>
-                  <span className="text-[10px] text-[#ACA394] block font-sans">{rev.city} • تم التحقق</span>
+                  <span className="text-[10px] text-[#57413C] block font-sans">{rev.city} • تم التحقق</span>
                 </div>
 
                 <div className="text-left">
-                  <span className="text-[10px] font-serif text-[#C9A227] block">{rev.perfume}</span>
-                  <span className="text-[9px] text-neutral-500 font-sans">{rev.date}</span>
+                  <span className="text-[10px] font-serif text-[#722F3F] font-bold block">{rev.perfume}</span>
+                  <span className="text-[9px] text-[#57413C]/70 font-sans">{rev.date}</span>
                 </div>
               </div>
             </div>

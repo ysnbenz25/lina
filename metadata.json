@@ -1,6 +1,6 @@
 {
-  "name": "Lina Shop | عطور فاخرة وأصلية في تونس",
-  "description": "اكتشف العطور الفاخرة والأصلية من Lina Shop مع التوصيل إلى كامل تونس والدفع عند الاستلام.",
+  "name": "Lina Shop | عطور زيتية وتركيبات مستوحاة في تونس",
+  "description": "متجر Lina Shop التونسي المتخصص في العطور الزيتية والتركيبات المستوحاة من أشهر الروائح العالمية بأسعار رمزية وأحجام متنوعة.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
