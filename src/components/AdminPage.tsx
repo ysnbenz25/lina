@@ -131,7 +131,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           recipientPhone: d17AdminPhone,
-          adminPassword: 'admin123',
+          adminPassword: 'aymen@2027',
         }),
       });
       const data = await res.json();
@@ -155,15 +155,37 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   };
 
   // Password submission
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'admin123') {
+    const cleanPwd = password.trim();
+    if (cleanPwd === 'aymen@2027') {
       setAuthError(false);
       setPassword('');
+      sessionStorage.setItem('admin_token', 'admin_authenticated_session_token');
       onLogin();
-    } else {
-      setAuthError(true);
+      return;
     }
+
+    // Also support checking via backend API
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: cleanPwd }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAuthError(false);
+        setPassword('');
+        sessionStorage.setItem('admin_token', data.token || 'admin_authenticated_session_token');
+        onLogin();
+        return;
+      }
+    } catch {
+      // Fallback
+    }
+
+    setAuthError(true);
   };
 
   // Switch to Add New Perfume
@@ -400,7 +422,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                   setPassword(e.target.value);
                   setAuthError(false);
                 }}
-                placeholder="أدخل كلمة المرور (الافتراضية: admin123)"
+                placeholder="أدخل كلمة مرور المشرف السرية"
                 className="w-full px-4 py-3 rounded-xl bg-[#08080a] border border-white/10 text-white placeholder-neutral-500 text-sm focus:border-[#d4af37] focus:outline-none transition-colors text-center"
               />
             </div>
@@ -408,7 +430,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
             {authError && (
               <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center justify-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>كلمة المرور غير صحيحة. كلمة المرور الافتراضية هي: admin123</span>
+                <span>كلمة المرور غير صحيحة. يرجى التأكد وإعادة المحاولة.</span>
               </div>
             )}
 
@@ -419,13 +441,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({
               تسجيل الدخول إلى لوحة التحكم
             </button>
           </form>
-
-          <div className="pt-4 border-t border-white/5 text-[11px] text-neutral-500">
-            <span>كلمة المرور الافتراضية للاختبار: </span>
-            <code className="text-[#d4af37] font-mono font-bold bg-[#08080a] px-2 py-0.5 rounded border border-white/10">
-              admin123
-            </code>
-          </div>
         </div>
       </div>
     );

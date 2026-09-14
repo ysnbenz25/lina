@@ -255,8 +255,11 @@ export default function App() {
     // Sync to backend API if available
     fetch(`/api/orders/${trackingNumber}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, adminPassword: 'admin123' }),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
+      },
+      body: JSON.stringify({ status, adminPassword: 'aymen@2027' }),
     }).catch(() => {});
 
     showToast('تم تحديث الشحنة', `تم تغيير حالة الطلب (${trackingNumber}) بنجاح.`);

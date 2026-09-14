@@ -4,6 +4,10 @@ import crypto from 'crypto';
 import { createServer as createViteServer } from 'vite';
 import { z } from 'zod';
 import { PERFUMES_DATA } from './src/data/perfumes';
+import { db } from './src/db/index.ts';
+import { orders as ordersTable, d17SettingsTable } from './src/db/schema.ts';
+import { getOrCreateUser } from './src/db/users.ts';
+import { adminAuth } from './src/lib/firebase-admin.ts';
 
 const app = express();
 const PORT = 3000;
@@ -560,11 +564,13 @@ const serverOrders: ServerOrder[] = [
   }
 ];
 
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'aymen@2027';
+
 // Helper: Check Admin Authorization
 function checkAdminAuth(req: Request): boolean {
   const token = req.headers['x-admin-token'];
   const password = req.body?.adminPassword || req.headers['x-admin-password'];
-  return token === 'admin_authenticated_session_token' || password === 'admin123';
+  return token === 'admin_authenticated_session_token' || password === ADMIN_PASSWORD;
 }
 
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
@@ -598,7 +604,7 @@ app.get('/api/settings/d17', generalRateLimiter, (_req: Request, res: Response) 
 // PATCH D17 Settings (Admin only)
 app.patch('/api/settings/d17', generalRateLimiter, (req: Request, res: Response) => {
   const { recipientPhone, recipientName, instructions, adminPassword } = req.body;
-  if (adminPassword !== 'admin123') {
+  if (adminPassword !== ADMIN_PASSWORD && req.headers['x-admin-token'] !== 'admin_authenticated_session_token') {
     return res.status(401).json({ success: false, message: 'غير مصرح: كلمة مرور المشرف غير صحيحة' });
   }
 
@@ -624,7 +630,7 @@ app.post(
   '/api/checkout',
   checkoutRateLimiter,
   verifyCsrfToken,
-  (req: Request, res: Response) => {
+  async (req: Request, res: Response) => {
     // 1. Zod Parse & Sanitize
     const validationResult = CheckoutRequestSchema.safeParse(req.body);
     if (!validationResult.success) {
@@ -723,6 +729,30 @@ app.post(
       expiresAt: Date.now() + 2 * 60 * 60 * 1000
     });
 
+    // Asynchronously persist order to Cloud SQL
+    try {
+      const firstItem = newOrder.items[0];
+      await db.insert(ordersTable).values({
+        trackingNumber: newOrder.trackingNumber,
+        customerName: newOrder.customerName,
+        phone: newOrder.phone,
+        city: newOrder.city,
+        address: `${newOrder.delegation ? newOrder.delegation + ' - ' : ''}${newOrder.address}`,
+        perfumeId: firstItem ? String(firstItem.id) : '1',
+        perfumeName: firstItem ? firstItem.name : 'Lina Perfume',
+        perfumeArabicName: firstItem ? firstItem.arabicName : 'عطر لينا الفاخر',
+        quantity: firstItem ? firstItem.quantity : 1,
+        total: newOrder.total,
+        paymentMethod: newOrder.paymentMethod,
+        d17TxId: newOrder.d17TransactionId || null,
+        status: newOrder.status,
+        clientIp: newOrder.clientIp || null,
+        userId: (req as any).user?.uid || null,
+      });
+    } catch (dbErr) {
+      console.error('Order Cloud SQL insert error:', dbErr);
+    }
+
     res.status(201).json({
       success: true,
       message:
@@ -735,10 +765,48 @@ app.post(
   }
 );
 
+// POST /api/auth/sync (Sync Firebase Auth User with Cloud SQL)
+app.post('/api/auth/sync', generalRateLimiter, async (req: Request, res: Response) => {
+  const { token, user } = req.body;
+  if (!user || !user.uid) {
+    return res.status(400).json({ success: false, message: 'معرف المستخدم مطلوب' });
+  }
+
+  try {
+    let verifiedUid = user.uid;
+    let verifiedEmail = user.email;
+
+    if (token) {
+      try {
+        const decoded = await adminAuth.verifyIdToken(token);
+        verifiedUid = decoded.uid;
+        verifiedEmail = decoded.email || user.email;
+      } catch (err) {
+        console.warn('Firebase token verification warning:', err);
+      }
+    }
+
+    const dbUser = await getOrCreateUser(
+      verifiedUid,
+      verifiedEmail || `${verifiedUid}@user.linashop.tn`,
+      user.displayName,
+      user.photoUrl
+    );
+
+    return res.json({
+      success: true,
+      user: dbUser
+    });
+  } catch (error) {
+    console.error('Failed to sync user with Cloud SQL:', error);
+    return res.status(500).json({ success: false, message: 'فشل مزامنة بيانات المستخدم مع قاعدة البيانات' });
+  }
+});
+
 // Admin Login Endpoint
 app.post('/api/admin/login', generalRateLimiter, (req: Request, res: Response) => {
   const { password } = req.body;
-  if (password === 'admin123') {
+  if (password === ADMIN_PASSWORD) {
     return res.json({
       success: true,
       token: 'admin_authenticated_session_token',
@@ -1050,7 +1118,7 @@ app.patch('/api/orders/:id/status', generalRateLimiter, (req: Request, res: Resp
   const { id } = req.params;
   const { status, adminPassword } = req.body;
 
-  if (adminPassword !== 'admin123' && req.headers['x-admin-token'] !== 'admin_authenticated_session_token') {
+  if (adminPassword !== ADMIN_PASSWORD && req.headers['x-admin-token'] !== 'admin_authenticated_session_token') {
     return res.status(401).json({ success: false, message: 'غير مصرح: كلمة مرور المشرف غير صحيحة' });
   }
 
