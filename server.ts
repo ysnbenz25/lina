@@ -434,10 +434,102 @@ let serverWebsiteSettings = {
 
 // Theme settings (editable by admin)
 let serverThemeSettings = {
-  primaryColor: "#0A0A0A",
-  accentColor: "#C9A227",
-  backgroundColor: "#0A0A0A",
-  textColor: "#E8E1D5"
+  primaryColor: "#722F3F",
+  accentColor: "#D6B56A",
+  backgroundColor: "#241B18",
+  textColor: "#F7F1E8",
+  buttonRadius: "md"
+};
+
+// Delivery settings (editable by admin)
+let serverDeliverySettings = {
+  shippingPrice: 7,
+  freeShippingThreshold: 150,
+  deliveryEstimate: "خلال 24 إلى 48 ساعة عمل",
+  deliveryNotice: "توصيل سريع ومضمون إلى كافة الولايات الـ 24 مع إمكانية المعاينة قبل الدفع",
+  governorates: [
+    { id: "tunis", name: "تونس", price: 7, active: true },
+    { id: "ariana", name: "أريانة", price: 7, active: true },
+    { id: "ben_arous", name: "بن عروس", price: 7, active: true },
+    { id: "manouba", name: "منوبة", price: 7, active: true },
+    { id: "sousse", name: "سوسة", price: 7, active: true },
+    { id: "sfax", name: "صفاقس", price: 7, active: true },
+    { id: "nabeul", name: "نابل", price: 7, active: true },
+    { id: "bizerte", name: "بنزرت", price: 7, active: true },
+    { id: "monastir", name: "المنستير", price: 7, active: true },
+    { id: "mahdia", name: "المهدية", price: 7, active: true },
+    { id: "kairouan", name: "القيروان", price: 7, active: true },
+    { id: "gabes", name: "قابس", price: 7, active: true },
+    { id: "medenine", name: "مدنين", price: 8, active: true },
+    { id: "tataouine", name: "تطاوين", price: 8, active: true },
+    { id: "gafsa", name: "قفصة", price: 8, active: true },
+    { id: "tozeur", name: "توزر", price: 8, active: true },
+    { id: "kebili", name: "قبلي", price: 8, active: true },
+    { id: "kasserine", name: "القصرين", price: 8, active: true },
+    { id: "sidi_bouzid", name: "سيدي بوزيد", price: 8, active: true },
+    { id: "kef", name: "الكاف", price: 8, active: true },
+    { id: "siliana", name: "سليانة", price: 8, active: true },
+    { id: "beja", name: "باجة", price: 7, active: true },
+    { id: "jendouba", name: "جندوبة", price: 8, active: true },
+    { id: "zaghouan", name: "زغوان", price: 7, active: true }
+  ]
+};
+
+// Content CMS settings (editable by admin)
+let serverContentSettings = {
+  about: {
+    title: "قصتنا... شغف العطور التونسية الفاخرة",
+    story: "انطلقت دار لينا شوب من حب عميق لفنون العطارة وعالم الزيوت العطرية النقية في تونس. هدفنا جعل الفخامة والأناقة في متناول الجميع بأسعار رمزية ومكونات عالية الجودة.",
+    image: "https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=1200&q=80"
+  },
+  faqs: [
+    {
+      id: "faq-1",
+      question: "هل العطور تدوم طويلاً؟ وما هي نسبة تركيز الزيت؟",
+      answer: "نعم بكل تأكيد! عطورنا مستخلصة بتركيز Eau de Parfum و Extrait de Parfum عالي النقاء، وتدوم فوحانها وثباتها من 24 إلى 48 ساعة على الملابس والأقمشة."
+    },
+    {
+      id: "faq-2",
+      question: "كيف يتم استلام الطلب والدفع في تونس؟",
+      answer: "نوفر الدفع عند الاستلام كاش (Paiement à la livraison) إلى باب منزلك، أو الدفع السريع والآمن عبر بطاقة D17 التابعة للبريد التونسي."
+    },
+    {
+      id: "faq-3",
+      question: "ما هي مدة التوصيل لكافة الولايات التونسية؟",
+      answer: "يتم تجهيز الطلب وشحنه فوراً ليصلك خلال 24 إلى 48 ساعة فقط في كامل ولايات تونس الـ 24."
+    }
+  ],
+  reviews: [
+    {
+      id: "rev-1",
+      author: "أحمد بن سالم",
+      city: "تونس العاصمة",
+      rating: 5,
+      comment: "عطر مذهل وفوحان لا يوصف، وصلني في أقل من 24 ساعة وتعامل راقي جداً.",
+      date: "2026-03-10"
+    },
+    {
+      id: "rev-2",
+      author: "مريم العبيدي",
+      city: "سوسة",
+      rating: 5,
+      comment: "الرائحة مطابقة تماماً للماركة العالمية الأصلية، والزيت المركز ثباته ممتاز!",
+      date: "2026-03-12"
+    }
+  ],
+  footerText: "متجر لينا شوب - المتجر التونسي الأول المتخصص في العطور التركيبية والزيوت العطرية الفاخرة بأسعار رمزية وتوصيل لكافة ولايات تونس.",
+  returnPolicy: "إمكانية الاستبدال خلال 48 ساعة في حالة عدم مطابقة المنتج أو وجود أي ملاحظة.",
+  termsAndConditions: "نلتزم بأعلى معايير النزاهة والمصداقية، وجميع العطور مجهزة بمواد أولية نقية وآمنة على البشرة."
+};
+
+// SEO & Meta tags settings (editable by admin)
+let serverSEOSettings = {
+  title: "LINA SHOP | متجر العطور والزيوت الفاخرة بتونس - عطور تركيبية بأسعار رمزية",
+  description: "اكتشف أفخم العطور التونسية والزيوت العطرية المركزة بأحجام من 5ml إلى 100ml بأسعار تبدأ من 5 د.ت مع توصيل سريع والدفع عند الاستلام أو D17.",
+  keywords: "عطور تونس, بارفان تونس, D17, عطور زيتية, عطور رجالية, عطور نسائية, Lina Shop",
+  ogTitle: "LINA SHOP | عطور نيش وزيوت نقية بأسعار استثنائية بتونس",
+  ogDescription: "تسوق أرقى العطور المستوحاة والزيوت العطرية بضمان الثبات والفوحان وتوصيل لكافة ولايات الجمهورية التونسية.",
+  ogImage: "https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=1200&q=80"
 };
 
 // Promotions store
@@ -1052,6 +1144,54 @@ app.get('/api/settings/theme', generalRateLimiter, (_req: Request, res: Response
 app.put('/api/settings/theme', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
   serverThemeSettings = { ...serverThemeSettings, ...req.body };
   res.json({ success: true, settings: serverThemeSettings, message: 'تم تحديث إعدادات المظهر بنجاح' });
+});
+
+// ==========================================
+// DELIVERY & SHIPPING SETTINGS
+// ==========================================
+
+app.get('/api/settings/delivery', generalRateLimiter, (_req: Request, res: Response) => {
+  res.json({ success: true, settings: serverDeliverySettings });
+});
+
+app.put('/api/settings/delivery', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  serverDeliverySettings = { ...serverDeliverySettings, ...req.body };
+  res.json({ success: true, settings: serverDeliverySettings, message: 'تم تحديث إعدادات التوصيل والولايات بنجاح' });
+});
+
+// ==========================================
+// CONTENT CMS SETTINGS
+// ==========================================
+
+app.get('/api/settings/content', generalRateLimiter, (_req: Request, res: Response) => {
+  res.json({ success: true, settings: serverContentSettings });
+});
+
+app.put('/api/settings/content', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  serverContentSettings = { ...serverContentSettings, ...req.body };
+  res.json({ success: true, settings: serverContentSettings, message: 'تم تحديث المحتوى والأسئلة الشائعة بنجاح' });
+});
+
+// ==========================================
+// SEO & METADATA SETTINGS
+// ==========================================
+
+app.get('/api/settings/seo', generalRateLimiter, (_req: Request, res: Response) => {
+  res.json({ success: true, settings: serverSEOSettings });
+});
+
+app.put('/api/settings/seo', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  serverSEOSettings = { ...serverSEOSettings, ...req.body };
+  res.json({ success: true, settings: serverSEOSettings, message: 'تم تحديث إعدادات SEO ومحركات البحث بنجاح' });
+});
+
+// Batch Categories Update
+app.put('/api/categories', generalRateLimiter, requireAdmin, (req: Request, res: Response) => {
+  const { categories } = req.body;
+  if (Array.isArray(categories)) {
+    serverCategories = categories;
+  }
+  res.json({ success: true, categories: serverCategories, message: 'تم تحديث قائمة التصنيفات بنجاح' });
 });
 
 // ==========================================

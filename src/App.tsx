@@ -423,6 +423,7 @@ export default function App() {
           setTrackingSearchCode('');
           setIsTrackingOpen(true);
         }}
+        onOpenAdmin={() => setIsAdminPageView(true)}
       />
 
       {/* Cart Drawer (Product image, name, price, quantity, subtotal, shipping, total in TND, "متابعة الطلب") */}

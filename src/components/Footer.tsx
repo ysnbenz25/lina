@@ -3,19 +3,28 @@ import { Phone, Mail, MapPin, Instagram, Facebook, Send, ShieldCheck } from 'luc
 import { WebsiteSettings } from '../types';
 
 interface FooterProps {
-  onNavigateView: (view: 'home' | 'shop' | 'about' | 'contact' | 'tracking' | 'admin') => void;
-  onNavigateCategory: (category: string) => void;
+  onNavigateView?: (view?: any) => void;
+  onNavigateCategory?: (category?: any) => void;
   settings?: WebsiteSettings;
+  websiteSettings?: WebsiteSettings;
+  onShowToast?: (title: string, message: string) => void;
+  onOpenTracking?: () => void;
+  onOpenAdmin?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
-  onNavigateView,
-  onNavigateCategory,
+  onNavigateView = (_view?: any) => {},
+  onNavigateCategory = (_category?: any) => {},
   settings,
+  websiteSettings,
+  onShowToast,
+  onOpenTracking,
+  onOpenAdmin,
 }) => {
-  const storePhone = settings?.storePhone || '+216 55 123 456';
-  const storeEmail = settings?.storeEmail || 'contact@linashop.tn';
-  const storeAddress = settings?.storeAddress || 'تونس، شارع الحبيب بورقيبة';
+  const activeSettings = websiteSettings || settings;
+  const storePhone = activeSettings?.phone || '+216 55 889 900';
+  const storeEmail = activeSettings?.email || 'contact@linashop.tn';
+  const storeAddress = activeSettings?.address || 'تونس، شارع الحبيب بورقيبة';
 
   return (
     <footer id="footer" className="bg-[#1A1311] text-[#F7F1E8] border-t border-[#D8C8B8]/20 pt-20 pb-12">
@@ -145,7 +154,10 @@ export const Footer: React.FC<FooterProps> = ({
             <ul className="space-y-2.5 text-xs text-[#D8C8B8] font-serif">
               <li>
                 <button
-                  onClick={() => onNavigateView('tracking')}
+                  onClick={() => {
+                    if (onOpenTracking) onOpenTracking();
+                    else onNavigateView('tracking');
+                  }}
                   className="hover:text-[#D6B56A] transition-colors cursor-pointer"
                 >
                   تتبع حالة طلبيتك
@@ -174,7 +186,10 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <button
-                  onClick={() => onNavigateView('admin')}
+                  onClick={() => {
+                    if (onOpenAdmin) onOpenAdmin();
+                    else onNavigateView('admin');
+                  }}
                   className="hover:text-[#D6B56A] transition-colors text-[#D8C8B8]/60 hover:text-white text-[11px] cursor-pointer"
                 >
                   بوابة الإدارة
