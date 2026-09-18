@@ -1,7 +1,7 @@
 // Vercel Serverless Function handler for /api/settings/d17
 // Handles D17 settings retrieval and updates on Vercel deployments
 
-let cachedPhone = '+216 55 889 900';
+let cachedPhone = '+216 27610626';
 
 export default function handler(req: any, res: any) {
   // CORS support
