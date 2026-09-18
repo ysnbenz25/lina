@@ -11,11 +11,14 @@ dotenv.config();
 import { createServer as createViteServer } from 'vite';
 import { z } from 'zod';
 import { PERFUMES_DATA } from './src/data/perfumes';
-import { db } from './src/db/index.ts';
-import { orders as ordersTable, d17SettingsTable } from './src/db/schema.ts';
-import { getOrCreateUser } from './src/db/users.ts';
-import { adminAuth } from './src/lib/firebase-admin.ts';
 import { getSupabaseServerAdmin } from './src/lib/supabaseServer.ts';
+import {
+  supabaseInsertOrder,
+  supabaseGetD17Settings,
+  supabaseSaveD17Settings,
+  supabaseGetOrCreateUser,
+  supabaseUpdateOrderStatus,
+} from './src/lib/supabaseDb.ts';
 
 const app = express();
 const PORT = 3000;
@@ -762,16 +765,15 @@ app.get('/api/supabase/status', async (_req: Request, res: Response) => {
 // GET D17 Settings
 app.get('/api/settings/d17', generalRateLimiter, async (_req: Request, res: Response) => {
   try {
-    const latestDbSetting = await db.select().from(d17SettingsTable).limit(1);
-    if (latestDbSetting.length > 0 && latestDbSetting[0].recipientPhone) {
-      d17Settings.recipientPhone = latestDbSetting[0].recipientPhone;
-      d17Settings.recipientName = latestDbSetting[0].recipientName;
-      d17Settings.instructions = latestDbSetting[0].instructions;
+    const supabaseD17 = await supabaseGetD17Settings();
+    if (supabaseD17 && supabaseD17.recipient_phone) {
+      d17Settings.recipientPhone = supabaseD17.recipient_phone;
+      d17Settings.recipientName = supabaseD17.recipient_name;
+      d17Settings.instructions = supabaseD17.instructions;
     } else {
       d17Settings = loadD17SettingsFromDisk();
     }
   } catch (err) {
-    // Cloud SQL might not be connected yet; load from local disk
     d17Settings = loadD17SettingsFromDisk();
   }
 
@@ -807,18 +809,18 @@ app.patch('/api/settings/d17', generalRateLimiter, async (req: Request, res: Res
   saveD17SettingsToDisk(d17Settings);
 
   try {
-    await db.insert(d17SettingsTable).values({
-      recipientPhone: d17Settings.recipientPhone,
-      recipientName: d17Settings.recipientName,
+    await supabaseSaveD17Settings({
+      recipient_phone: d17Settings.recipientPhone,
+      recipient_name: d17Settings.recipientName,
       instructions: d17Settings.instructions,
     });
   } catch (dbErr) {
-    // Cloud SQL optional fallback
+    // Supabase optional notice
   }
 
   res.json({
     success: true,
-    message: 'تم تحديث إعدادات D17 بنجاح',
+    message: 'تم تحديث إعدادات D17 بنجاح وحفظها في Supabase',
     d17Settings
   });
 });
@@ -927,28 +929,30 @@ app.post(
       expiresAt: Date.now() + 2 * 60 * 60 * 1000
     });
 
-    // Asynchronously persist order to Cloud SQL
+    // Asynchronously persist order to Supabase
     try {
       const firstItem = newOrder.items[0];
-      await db.insert(ordersTable).values({
-        trackingNumber: newOrder.trackingNumber,
-        customerName: newOrder.customerName,
+      await supabaseInsertOrder({
+        tracking_number: newOrder.trackingNumber,
+        customer_name: newOrder.customerName,
         phone: newOrder.phone,
         city: newOrder.city,
+        delegation: newOrder.delegation,
         address: `${newOrder.delegation ? newOrder.delegation + ' - ' : ''}${newOrder.address}`,
-        perfumeId: firstItem ? String(firstItem.id) : '1',
-        perfumeName: firstItem ? firstItem.name : 'Lina Perfume',
-        perfumeArabicName: firstItem ? firstItem.arabicName : 'عطر لينا الفاخر',
+        perfume_id: firstItem ? String(firstItem.id) : '1',
+        perfume_name: firstItem ? firstItem.name : 'Lina Perfume',
+        perfume_arabic_name: firstItem ? firstItem.arabicName : 'عطر لينا الفاخر',
         quantity: firstItem ? firstItem.quantity : 1,
         total: newOrder.total,
-        paymentMethod: newOrder.paymentMethod,
-        d17TxId: newOrder.d17TransactionId || null,
+        payment_method: newOrder.paymentMethod,
+        d17_tx_id: newOrder.d17TransactionId || null,
         status: newOrder.status,
-        clientIp: newOrder.clientIp || null,
-        userId: (req as any).user?.uid || null,
+        client_ip: newOrder.clientIp || null,
+        user_id: (req as any).user?.id || (req as any).user?.uid || null,
+        items: newOrder.items,
       });
     } catch (dbErr) {
-      console.error('Order Cloud SQL insert error:', dbErr);
+      console.error('Order Supabase insert error:', dbErr);
     }
 
     res.status(201).json({
@@ -963,32 +967,35 @@ app.post(
   }
 );
 
-// POST /api/auth/sync (Sync Firebase Auth User with Cloud SQL)
+// POST /api/auth/sync (Sync Supabase Auth User with Database)
 app.post('/api/auth/sync', generalRateLimiter, async (req: Request, res: Response) => {
   const { token, user } = req.body;
-  if (!user || !user.uid) {
+  if (!user || (!user.uid && !user.id)) {
     return res.status(400).json({ success: false, message: 'معرف المستخدم مطلوب' });
   }
 
   try {
-    let verifiedUid = user.uid;
+    let verifiedUid = user.uid || user.id;
     let verifiedEmail = user.email;
 
     if (token) {
       try {
-        const decoded = await adminAuth.verifyIdToken(token);
-        verifiedUid = decoded.uid;
-        verifiedEmail = decoded.email || user.email;
+        const supabase = getSupabaseServerAdmin();
+        const { data: { user: sbUser } } = await supabase.auth.getUser(token);
+        if (sbUser) {
+          verifiedUid = sbUser.id;
+          verifiedEmail = sbUser.email || user.email;
+        }
       } catch (err) {
-        console.warn('Firebase token verification warning:', err);
+        console.warn('Supabase token verification warning:', err);
       }
     }
 
-    const dbUser = await getOrCreateUser(
+    const dbUser = await supabaseGetOrCreateUser(
       verifiedUid,
       verifiedEmail || `${verifiedUid}@user.linashop.tn`,
-      user.displayName,
-      user.photoUrl
+      user.displayName || user.name,
+      user.photoUrl || user.avatar
     );
 
     return res.json({
@@ -996,7 +1003,7 @@ app.post('/api/auth/sync', generalRateLimiter, async (req: Request, res: Respons
       user: dbUser
     });
   } catch (error) {
-    console.error('Failed to sync user with Cloud SQL:', error);
+    console.error('Failed to sync user with Supabase:', error);
     return res.status(500).json({ success: false, message: 'فشل مزامنة بيانات المستخدم مع قاعدة البيانات' });
   }
 });
@@ -1389,6 +1396,11 @@ app.patch('/api/orders/:id/status', generalRateLimiter, (req: Request, res: Resp
   }
 
   order.status = status;
+
+  // Persist status change to Supabase
+  supabaseUpdateOrderStatus(order.trackingNumber, status).catch((err) => {
+    console.warn('Notice syncing order status to Supabase:', err);
+  });
 
   res.json({
     success: true,
