@@ -2,6 +2,12 @@ import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env.local first, then fallback to .env
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+dotenv.config();
+
 import { createServer as createViteServer } from 'vite';
 import { z } from 'zod';
 import { PERFUMES_DATA } from './src/data/perfumes';
@@ -9,6 +15,7 @@ import { db } from './src/db/index.ts';
 import { orders as ordersTable, d17SettingsTable } from './src/db/schema.ts';
 import { getOrCreateUser } from './src/db/users.ts';
 import { adminAuth } from './src/lib/firebase-admin.ts';
+import { getSupabaseServerAdmin } from './src/lib/supabaseServer.ts';
 
 const app = express();
 const PORT = 3000;
@@ -713,6 +720,43 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
 // Health check
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Safe Supabase server status & connectivity check (never exposes service_role key)
+app.get('/api/supabase/status', async (_req: Request, res: Response) => {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jkdwpnmcnidfftebypet.supabase.co';
+    const anonKeyConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    const serviceRoleConfigured = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+    let testStatus = 'initialized';
+    try {
+      const admin = getSupabaseServerAdmin();
+      // Test basic connection
+      const { error } = await admin.auth.getSession();
+      if (error) {
+        testStatus = `auth_checked_with_notice: ${error.message}`;
+      } else {
+        testStatus = 'connected_and_healthy';
+      }
+    } catch (e: any) {
+      testStatus = `error: ${e.message}`;
+    }
+
+    res.json({
+      success: true,
+      supabaseUrl,
+      anonKeyConfigured,
+      serviceRoleConfigured,
+      serverConnection: testStatus,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error?.message || 'Failed to check Supabase status',
+    });
+  }
 });
 
 // GET D17 Settings
