@@ -27,57 +27,85 @@ export async function fetchProductsFromSupabase(): Promise<Perfume[]> {
       .order('id', { ascending: true });
 
     if (error) {
-      console.error('Supabase products fetch error:', error);
-      return PERFUMES_DATA;
+      console.error('[Supabase SELECT Error] Failed to fetch products from public.products:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
+      return [];
     }
 
-    if (data && data.length > 0) {
-      return data.map((row: any) => ({
-        id: Number(row.id) || row.id,
-        name: row.name,
-        arabicName: row.arabic_name,
-        badge: row.badge || '',
-        category: row.category,
-        price: Number(row.price),
-        originalPrice: Number(row.original_price || row.price),
-        volume: row.volume || '100 ml',
-        rating: Number(row.rating || 5.0),
-        reviewsCount: Number(row.reviews_count || 1),
-        image: row.image,
-        gallery: [row.image],
+    if (!data || data.length === 0) {
+      console.warn('[Supabase SELECT Warning] public.products returned 0 rows.');
+      return [];
+    }
+
+    console.info(`[Supabase SELECT Success] Successfully fetched ${data.length} products from public.products.`);
+
+    return data.map((row: any) => {
+      const price = Number(row.price) || 0;
+      const originalPrice = row.original_price ? Number(row.original_price) : price;
+      const numId = Number(row.id);
+      const safeId = !isNaN(numId) && numId > 0 ? numId : 1;
+      const cat = String(row.category || 'عطور للجنسين');
+
+      // Detect gender from category
+      let gender: 'women' | 'men' | 'unisex' = 'unisex';
+      if (cat.includes('نسائ') || cat.includes('femme')) {
+        gender = 'women';
+      } else if (cat.includes('رجال') || cat.includes('homme')) {
+        gender = 'men';
+      }
+
+      const imageUrl = String(row.image || '');
+
+      return {
+        id: safeId,
+        name: String(row.name || ''),
+        arabicName: String(row.arabic_name || row.name || ''),
+        badge: String(row.badge || ''),
+        category: cat,
+        price: price,
+        originalPrice: originalPrice,
+        volume: String(row.volume || '100 ml'),
+        rating: Number(row.rating) || 5.0,
+        reviewsCount: Number(row.reviews_count) || 1,
+        image: imageUrl,
+        gallery: [imageUrl],
         sizes: ['30 ml', '50 ml', '100 ml'],
         sizeOptions: [
-          { size: '30 ml', price: Math.round(Number(row.price) * 0.4), originalPrice: Math.round(Number(row.original_price || row.price) * 0.4) },
-          { size: '50 ml', price: Math.round(Number(row.price) * 0.65), originalPrice: Math.round(Number(row.original_price || row.price) * 0.65) },
-          { size: row.volume || '100 ml', price: Number(row.price), originalPrice: Number(row.original_price || row.price) },
+          { size: '30 ml', price: Math.round(price * 0.45) || 8, originalPrice: Math.round(originalPrice * 0.45) || 12 },
+          { size: '50 ml', price: Math.round(price * 0.7) || 14, originalPrice: Math.round(originalPrice * 0.7) || 18 },
+          { size: String(row.volume || '100 ml'), price: price, originalPrice: originalPrice },
         ],
-        fragranceType: 'Eau de Parfum',
-        inspiredBy: '',
-        gender: 'unisex',
-        isSpecialOffer: Boolean(row.badge && row.badge.includes('عرض')),
+        fragranceType: cat.includes('زيتي') ? 'عطر زيتي مركز' : 'تركيبة عطرية مستوحاة',
+        inspiredBy: String(row.arabic_name || '').includes('مستوحاة من')
+          ? String(row.arabic_name).replace(/.*مستوحاة من\s*/, '')
+          : '',
+        gender: gender,
+        isSpecialOffer: Boolean((row.badge && row.badge.includes('عرض')) || (originalPrice > price)),
         isFeatured: true,
-        isBestseller: Boolean(row.badge && row.badge.includes('الأكثر مبيعاً')),
+        isBestseller: Boolean(row.badge && (row.badge.includes('مبيعاً') || row.badge.includes('طلباً'))),
         isNew: Boolean(row.badge && row.badge.includes('جديد')),
-        isMostDemanded: false,
+        isMostDemanded: Boolean(row.badge && row.badge.includes('طلباً')),
         isActive: true,
-        stock: 25,
+        stock: 50,
         sku: `LINA-${row.id}`,
-        description: row.description || '',
+        description: String(row.description || ''),
         notes: {
-          top: row.top_note || 'حمضيات منعشة',
-          heart: row.heart_note || 'زهور نادرة وتوابل',
-          base: row.base_note || 'أخشاب وعنبر ومسك',
+          top: String(row.top_note || 'حمضيات منعشة'),
+          heart: String(row.heart_note || 'زهور نادرة وتوابل'),
+          base: String(row.base_note || 'أخشاب وعنبر ومسك'),
         },
-        longevity: row.longevity || 'يدوم أكثر من 18 ساعة',
-        sillage: row.sillage || 'قوي ونفاذ جداً',
-        season: row.season || 'جميع الفصول / مناسبات خاصة',
+        longevity: String(row.longevity || 'يدوم أكثر من 18 ساعة'),
+        sillage: String(row.sillage || 'قوي ونفاذ جداً'),
+        season: String(row.season || 'جميع الفصول / مناسبات خاصة'),
         inStock: row.in_stock !== false,
-      }));
-    }
-
-    return [];
-  } catch (err) {
-    console.error('Error fetching products from Supabase:', err);
+      };
+    });
+  } catch (err: any) {
+    console.error('[Supabase SELECT Exception] Critical error in fetchProductsFromSupabase:', err);
     return [];
   }
 }

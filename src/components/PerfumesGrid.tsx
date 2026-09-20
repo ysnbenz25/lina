@@ -12,6 +12,7 @@ interface PerfumesGridProps {
   isAdminMode?: boolean;
   onDeletePerfume?: (id: number) => void;
   onOpenAdminModal?: () => void;
+  isLoading?: boolean;
 }
 
 export const CATEGORY_TABS = [
@@ -36,6 +37,7 @@ export const PerfumesGrid: React.FC<PerfumesGridProps> = ({
   isAdminMode = false,
   onDeletePerfume,
   onOpenAdminModal,
+  isLoading = false,
 }) => {
   const [favorites, setFavorites] = useState<number[]>([]);
 
@@ -53,39 +55,41 @@ export const PerfumesGrid: React.FC<PerfumesGridProps> = ({
   const filteredPerfumes = perfumes.filter((p) => {
     let matchesCategory = false;
 
-    if (selectedCategory === 'الكل') {
+    if (!selectedCategory || selectedCategory === 'الكل') {
       matchesCategory = true;
     } else if (selectedCategory === 'عطور نسائية') {
-      matchesCategory = p.category === 'عطور نسائية' || p.gender === 'women';
+      matchesCategory = p.category?.includes('نسائ') || p.gender === 'women';
     } else if (selectedCategory === 'عطور رجالية') {
-      matchesCategory = p.category === 'عطور رجالية' || p.gender === 'men';
+      matchesCategory = p.category?.includes('رجال') || p.gender === 'men';
     } else if (selectedCategory === 'عطور للجنسين') {
-      matchesCategory = p.category === 'عطور للجنسين' || p.gender === 'unisex';
+      matchesCategory = p.category?.includes('جنسين') || p.gender === 'unisex';
     } else if (selectedCategory === 'العطور الزيتية') {
-      matchesCategory = p.category === 'العطور الزيتية' || p.fragranceType?.includes('زيتي');
+      matchesCategory = p.category?.includes('زيتي') || p.category?.includes('الزيتية') || (p.fragranceType && p.fragranceType.includes('زيتي'));
     } else if (selectedCategory === 'الأكثر مبيعاً') {
-      matchesCategory = !!(p.isBestseller || p.isMostDemanded || p.badge?.includes('مبيعاً') || p.badge?.includes('طلباً'));
+      matchesCategory = Boolean(p.isBestseller || p.isMostDemanded || p.badge?.includes('مبيعاً') || p.badge?.includes('طلباً'));
     } else if (selectedCategory === 'العروض' || selectedCategory === 'عروض خاصة') {
-      matchesCategory = !!(p.isSpecialOffer || (p.originalPrice && p.originalPrice > p.price));
+      matchesCategory = Boolean(p.isSpecialOffer || (p.originalPrice && p.originalPrice > p.price) || p.badge?.includes('عرض'));
     } else if (selectedCategory === 'أحجام صغيرة') {
       const allSizes = p.sizeOptions?.map(s => s.size) || p.sizes || [];
-      matchesCategory = allSizes.some(s => s.includes('5') || s.includes('10') || s.includes('15') || s.includes('20'));
+      matchesCategory = allSizes.some(s => s.includes('5') || s.includes('10') || s.includes('15') || s.includes('20') || s.includes('30'));
     } else if (selectedCategory === 'أحجام كبيرة') {
       const allSizes = p.sizeOptions?.map(s => s.size) || p.sizes || [];
       matchesCategory = allSizes.some(s => s.includes('50') || s.includes('100'));
     } else {
-      matchesCategory = p.category === selectedCategory;
+      matchesCategory = p.category === selectedCategory || (p.category && p.category.includes(selectedCategory));
     }
 
+    const term = (searchTerm || '').trim().toLowerCase();
     const matchesSearch =
-      !searchTerm ||
-      p.arabicName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.inspiredBy && p.inspiredBy.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (p.notes?.top && p.notes.top.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (p.notes?.heart && p.notes.heart.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (p.notes?.base && p.notes.base.toLowerCase().includes(searchTerm.toLowerCase()));
+      !term ||
+      Boolean(p.arabicName && p.arabicName.toLowerCase().includes(term)) ||
+      Boolean(p.name && p.name.toLowerCase().includes(term)) ||
+      Boolean(p.inspiredBy && p.inspiredBy.toLowerCase().includes(term)) ||
+      Boolean(p.description && p.description.toLowerCase().includes(term)) ||
+      Boolean(p.category && p.category.toLowerCase().includes(term)) ||
+      Boolean(p.notes?.top && p.notes.top.toLowerCase().includes(term)) ||
+      Boolean(p.notes?.heart && p.notes.heart.toLowerCase().includes(term)) ||
+      Boolean(p.notes?.base && p.notes.base.toLowerCase().includes(term));
 
     return matchesCategory && matchesSearch;
   });
@@ -153,8 +157,19 @@ export const PerfumesGrid: React.FC<PerfumesGridProps> = ({
           </div>
         )}
 
-        {/* Empty State */}
-        {filteredPerfumes.length === 0 ? (
+        {/* Loading Skeleton */}
+        {isLoading && perfumes.length === 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6 animate-pulse">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="bg-[#332522]/60 rounded-2xl border border-[#D8C8B8]/10 p-3 sm:p-4 space-y-3">
+                <div className="aspect-square bg-[#241B18]/80 rounded-xl" />
+                <div className="h-4 bg-[#241B18]/60 rounded w-3/4" />
+                <div className="h-3 bg-[#241B18]/40 rounded w-1/2" />
+                <div className="h-6 bg-[#241B18]/60 rounded w-1/3" />
+              </div>
+            ))}
+          </div>
+        ) : filteredPerfumes.length === 0 ? (
           <div className="text-center py-20 bg-[#332522] rounded-2xl border border-[#D8C8B8]/20 space-y-4">
             <p className="text-[#D8C8B8] text-sm font-serif">لم يتم العثور على عطور تطابق اختيارك الحالي.</p>
             <button
@@ -226,8 +241,9 @@ export const PerfumesGrid: React.FC<PerfumesGridProps> = ({
                     onClick={() => onOpenQuickView(perfume)}
                   >
                     <img
-                      src={perfume.image}
-                      alt={perfume.arabicName}
+                      src={perfume.image || 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=800&q=80'}
+                      alt={perfume.arabicName || perfume.name}
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter contrast-105"
                       loading="lazy"
                     />

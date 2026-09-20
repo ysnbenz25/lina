@@ -22,7 +22,7 @@ import { CheckoutModal } from './components/CheckoutModal';
 import { OrderTrackingModal } from './components/OrderTrackingModal';
 import { AdminPage } from './components/AdminPage';
 import { Toast } from './components/Toast';
-import { PERFUMES_DATA, DEFAULT_HOMEPAGE_SETTINGS } from './data/perfumes';
+import { DEFAULT_HOMEPAGE_SETTINGS } from './data/perfumes';
 import { Perfume, CartItem, Order, OrderStatus, HomepageSettings } from './types';
 import { CheckCircle2, Copy, ArrowLeft, Truck } from 'lucide-react';
 import {
@@ -38,8 +38,8 @@ import {
 } from './lib/supabaseStore';
 
 export default function App() {
-  // 1. Perfumes State (Directly sourced from Supabase)
-  const [perfumes, setPerfumes] = useState<Perfume[]>(PERFUMES_DATA);
+  // 1. Perfumes State (Directly and exclusively sourced from Supabase public.products)
+  const [perfumes, setPerfumes] = useState<Perfume[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 2. Cart State (Transient in-memory session state)
@@ -87,34 +87,39 @@ export default function App() {
     async function initSupabaseData() {
       try {
         setLoading(true);
-        const [loadedProducts, loadedOrders, loadedHomepage] = await Promise.all([
-          fetchProductsFromSupabase(),
-          fetchOrdersFromSupabase(),
-          fetchStoreSettingFromSupabase('homepage', DEFAULT_HOMEPAGE_SETTINGS),
-        ]);
 
-        if (!isMounted) return;
-
-        if (loadedProducts && loadedProducts.length > 0) {
-          setPerfumes(loadedProducts);
-        } else {
-          // If empty in Supabase, seed defaults
-          await seedSupabaseDefaults();
-          const seeded = await fetchProductsFromSupabase();
-          if (isMounted && seeded.length > 0) {
-            setPerfumes(seeded);
+        // 1. Fetch real products directly and solely from Supabase public.products table
+        try {
+          const loadedProducts = await fetchProductsFromSupabase();
+          if (isMounted) {
+            console.info(`[Storefront Data] Successfully received ${loadedProducts.length} products from Supabase.`);
+            setPerfumes(loadedProducts);
           }
+        } catch (prodErr) {
+          console.error('[Storefront Data Error] Failed to fetch products from Supabase:', prodErr);
         }
 
-        if (loadedOrders && loadedOrders.length > 0) {
-          setOrders(loadedOrders);
+        // 2. Fetch homepage store settings in parallel
+        try {
+          const loadedHomepage = await fetchStoreSettingFromSupabase('homepage', DEFAULT_HOMEPAGE_SETTINGS);
+          if (isMounted && loadedHomepage) {
+            setHomepageSettings(loadedHomepage as HomepageSettings);
+          }
+        } catch (settingsErr) {
+          console.warn('[Storefront Data Notice] Homepage settings fetch notice:', settingsErr);
         }
 
-        if (loadedHomepage) {
-          setHomepageSettings(loadedHomepage as HomepageSettings);
+        // 3. Fetch orders
+        try {
+          const loadedOrders = await fetchOrdersFromSupabase();
+          if (isMounted && loadedOrders && loadedOrders.length > 0) {
+            setOrders(loadedOrders);
+          }
+        } catch (orderErr) {
+          console.warn('[Storefront Data Notice] Orders fetch notice:', orderErr);
         }
       } catch (err) {
-        console.error('Error loading data from Supabase:', err);
+        console.error('[Storefront Data Critical] Unexpected error in initSupabaseData:', err);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -389,6 +394,7 @@ export default function App() {
           isAdminMode={isAdminLoggedIn}
           onDeletePerfume={handleDeletePerfume}
           onOpenAdminModal={() => setIsAdminPageView(true)}
+          isLoading={loading}
         />
 
         {/* 6. Premium Collection Editorial Section ("مجموعة النخبة" with dark luxury overlay & CTA) */}
