@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckCircle2, ShieldCheck, MapPin, Truck, Smartphone, Banknote, Copy, Check, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react';
 import { CartItem, Order, TUNISIA_GOVERNORATES, PaymentMethod, TunisiaGovernorate } from '../types';
+import { fetchD17SettingsFromSupabase } from '../lib/supabaseStore';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -25,13 +26,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   // Payment states
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
   const [d17TransactionId, setD17TransactionId] = useState('');
-  const [d17RecipientPhone, setD17RecipientPhone] = useState(() => {
-    try {
-      return localStorage.getItem('lina_d17_phone') || '+216 55 889 900';
-    } catch {
-      return '+216 55 889 900';
-    }
-  });
+  const [d17RecipientPhone, setD17RecipientPhone] = useState('+216 55 889 900');
 
   // Security & Request states
   const [csrfToken, setCsrfToken] = useState<string>('');
@@ -45,29 +40,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const customEvent = e as CustomEvent<string>;
       if (customEvent.detail) {
         setD17RecipientPhone(customEvent.detail);
-      } else {
-        const stored = localStorage.getItem('lina_d17_phone');
-        if (stored) setD17RecipientPhone(stored);
       }
     };
 
     window.addEventListener('lina_d17_updated', handleD17Update);
-    window.addEventListener('storage', handleD17Update);
     return () => {
       window.removeEventListener('lina_d17_updated', handleD17Update);
-      window.removeEventListener('storage', handleD17Update);
     };
   }, []);
 
-  // Fetch CSRF Token & D17 settings on modal open
+  // Fetch CSRF Token & D17 settings directly from Supabase on modal open
   useEffect(() => {
     if (!isOpen) return;
 
-    // Refresh from localStorage first
-    try {
-      const stored = localStorage.getItem('lina_d17_phone');
-      if (stored) setD17RecipientPhone(stored);
-    } catch {}
+    // Fetch D17 recipient settings directly from Supabase
+    fetchD17SettingsFromSupabase().then((settings) => {
+      if (settings?.recipientPhone) {
+        setD17RecipientPhone(settings.recipientPhone);
+      }
+    }).catch(() => {});
 
     // Fetch CSRF Token
     fetch('/api/csrf-token')
@@ -85,22 +76,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       .catch(() => {
         setCsrfToken('local-csrf-' + Math.random().toString(36).substring(2));
       });
-
-    // Fetch D17 recipient settings
-    fetch('/api/settings/d17')
-      .then(async (res) => {
-        const contentType = res.headers.get('content-type') || '';
-        if (res.ok && contentType.includes('application/json')) {
-          const data = await res.json();
-          if (data.d17Settings?.recipientPhone) {
-            setD17RecipientPhone(data.d17Settings.recipientPhone);
-            try {
-              localStorage.setItem('lina_d17_phone', data.d17Settings.recipientPhone);
-            } catch {}
-          }
-        }
-      })
-      .catch(() => {});
   }, [isOpen]);
 
   if (!isOpen) return null;

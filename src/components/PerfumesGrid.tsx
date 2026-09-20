@@ -37,27 +37,16 @@ export const PerfumesGrid: React.FC<PerfumesGridProps> = ({
   onDeletePerfume,
   onOpenAdminModal,
 }) => {
-  const [favorites, setFavorites] = useState<number[]>(() => {
-    try {
-      const saved = localStorage.getItem('lina_shop_favorites');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [favorites, setFavorites] = useState<number[]>([]);
 
   // Track currently selected size for each card
   const [cardSelectedSizes, setCardSelectedSizes] = useState<Record<number, string>>({});
 
   const toggleFavorite = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    setFavorites((prev) => {
-      const next = prev.includes(id) ? prev.filter((favId) => favId !== id) : [...prev, id];
-      try {
-        localStorage.setItem('lina_shop_favorites', JSON.stringify(next));
-      } catch {}
-      return next;
-    });
+    setFavorites((prev) =>
+      prev.includes(id) ? prev.filter((favId) => favId !== id) : [...prev, id]
+    );
   };
 
   // Filter perfumes based on category and search term

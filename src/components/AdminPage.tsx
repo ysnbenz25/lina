@@ -52,6 +52,14 @@ import {
   DEFAULT_CONTENT_SETTINGS,
   DEFAULT_PROMOTIONS,
 } from '../data/defaultSettings';
+import {
+  fetchCategoriesFromSupabase,
+  saveCategoriesToSupabase,
+  fetchStoreSettingFromSupabase,
+  saveStoreSettingToSupabase,
+  fetchD17SettingsFromSupabase,
+  saveD17SettingsToSupabase,
+} from '../lib/supabaseStore';
 
 import { AdminOverviewTab } from './admin/AdminOverviewTab';
 import { AdminProductsTab } from './admin/AdminProductsTab';
@@ -148,331 +156,130 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   // Active Tab
   const [activeTab, setActiveTab] = useState<AdminTabType>('overview');
 
-  // Local state fallbacks for standalone control
-  const [localCategories, setLocalCategories] = useState<Category[]>(() => {
-    try {
-      const saved = localStorage.getItem('lina_shop_categories');
-      return saved ? JSON.parse(saved) : categories;
-    } catch {
-      return categories;
-    }
-  });
-
-  const [localPromotions, setLocalPromotions] = useState<Promotion[]>(() => {
-    try {
-      const saved = localStorage.getItem('lina_shop_promotions');
-      return saved ? JSON.parse(saved) : promotions;
-    } catch {
-      return promotions;
-    }
-  });
-
-  const [localWebsiteSettings, setLocalWebsiteSettings] = useState<WebsiteSettings>(() => {
-    try {
-      const saved = localStorage.getItem('lina_shop_website_settings');
-      return saved ? JSON.parse(saved) : websiteSettings;
-    } catch {
-      return websiteSettings;
-    }
-  });
-
-  const [localThemeSettings, setLocalThemeSettings] = useState<ThemeSettings>(() => {
-    try {
-      const saved = localStorage.getItem('lina_shop_theme_settings');
-      return saved ? JSON.parse(saved) : themeSettings;
-    } catch {
-      return themeSettings;
-    }
-  });
-
-  const [localDeliverySettings, setLocalDeliverySettings] = useState<DeliverySettings>(() => {
-    try {
-      const saved = localStorage.getItem('lina_shop_delivery_settings');
-      return saved ? JSON.parse(saved) : deliverySettings;
-    } catch {
-      return deliverySettings;
-    }
-  });
-
-  const [localContentSettings, setLocalContentSettings] = useState<ContentSettings>(() => {
-    try {
-      const saved = localStorage.getItem('lina_shop_content_settings');
-      return saved ? JSON.parse(saved) : contentSettings;
-    } catch {
-      return contentSettings;
-    }
-  });
-
-  const [localSeoSettings, setLocalSeoSettings] = useState<SEOSettings>(() => {
-    try {
-      const saved = localStorage.getItem('lina_shop_seo_settings');
-      return saved ? JSON.parse(saved) : seoSettings;
-    } catch {
-      return seoSettings;
-    }
-  });
+  // Local state fallbacks for standalone control (loaded from Supabase)
+  const [localCategories, setLocalCategories] = useState<Category[]>(categories);
+  const [localPromotions, setLocalPromotions] = useState<Promotion[]>(promotions);
+  const [localWebsiteSettings, setLocalWebsiteSettings] = useState<WebsiteSettings>(websiteSettings);
+  const [localThemeSettings, setLocalThemeSettings] = useState<ThemeSettings>(themeSettings);
+  const [localDeliverySettings, setLocalDeliverySettings] = useState<DeliverySettings>(deliverySettings);
+  const [localContentSettings, setLocalContentSettings] = useState<ContentSettings>(contentSettings);
+  const [localSeoSettings, setLocalSeoSettings] = useState<SEOSettings>(seoSettings);
 
   // D17 Admin Phone State
-  const [d17AdminPhone, setD17AdminPhone] = useState(() => {
-    try {
-      return localStorage.getItem('lina_d17_phone') || '+216 55 889 900';
-    } catch {
-      return '+216 55 889 900';
-    }
-  });
+  const [d17AdminPhone, setD17AdminPhone] = useState('+216 55 889 900');
 
-  // Load server settings on mount
+  // Load Supabase settings on mount
   useEffect(() => {
-    // 1. D17
-    fetch('/api/settings/d17')
-      .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          if (data.d17Settings?.recipientPhone) {
-            setD17AdminPhone(data.d17Settings.recipientPhone);
-            try {
-              localStorage.setItem('lina_d17_phone', data.d17Settings.recipientPhone);
-            } catch {}
-          }
-        }
-      })
-      .catch(() => {});
+    // 1. D17 Settings from Supabase
+    fetchD17SettingsFromSupabase().then((d17) => {
+      if (d17?.recipientPhone) setD17AdminPhone(d17.recipientPhone);
+    }).catch(() => {});
 
-    // 2. Categories
-    fetch('/api/categories')
-      .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          if (data.categories && Array.isArray(data.categories)) {
-            setLocalCategories(data.categories);
-          }
-        }
-      })
-      .catch(() => {});
+    // 2. Categories from Supabase
+    fetchCategoriesFromSupabase().then((cats) => {
+      if (cats && cats.length > 0) setLocalCategories(cats);
+    }).catch(() => {});
 
-    // 3. Website Settings
-    fetch('/api/settings/website')
-      .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          if (data.settings) {
-            setLocalWebsiteSettings((prev) => ({ ...prev, ...data.settings }));
-          }
-        }
-      })
-      .catch(() => {});
+    // 3. Website Settings from Supabase
+    fetchStoreSettingFromSupabase('website', DEFAULT_WEBSITE_SETTINGS).then((settings) => {
+      if (settings) setLocalWebsiteSettings((prev) => ({ ...prev, ...settings }));
+    }).catch(() => {});
 
-    // 4. Promotions
-    fetch('/api/promotions', {
-      headers: { 'x-admin-token': 'admin_authenticated_session_token' }
-    })
-      .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          if (data.promotions && Array.isArray(data.promotions)) {
-            setLocalPromotions(data.promotions);
-          }
-        }
-      })
-      .catch(() => {});
+    // 4. Promotions from Supabase
+    fetchStoreSettingFromSupabase('promotions', DEFAULT_PROMOTIONS).then((promos) => {
+      if (promos && Array.isArray(promos)) setLocalPromotions(promos);
+    }).catch(() => {});
+
+    // 5. Theme Settings from Supabase
+    fetchStoreSettingFromSupabase('theme', DEFAULT_THEME_SETTINGS).then((theme) => {
+      if (theme) setLocalThemeSettings(theme);
+    }).catch(() => {});
+
+    // 6. Delivery Settings from Supabase
+    fetchStoreSettingFromSupabase('delivery', DEFAULT_DELIVERY_SETTINGS).then((delivery) => {
+      if (delivery) setLocalDeliverySettings(delivery);
+    }).catch(() => {});
+
+    // 7. Content Settings from Supabase
+    fetchStoreSettingFromSupabase('content', DEFAULT_CONTENT_SETTINGS).then((content) => {
+      if (content) setLocalContentSettings(content);
+    }).catch(() => {});
+
+    // 8. SEO Settings from Supabase
+    fetchStoreSettingFromSupabase('seo', DEFAULT_SEO_SETTINGS).then((seo) => {
+      if (seo) setLocalSeoSettings(seo);
+    }).catch(() => {});
   }, []);
 
-  // Save D17 Phone handler
+  // Save D17 Phone handler directly in Supabase
   const handleSaveD17 = async (phone: string) => {
     const clean = phone.trim();
     setD17AdminPhone(clean);
-    try {
-      localStorage.setItem('lina_d17_phone', clean);
-      window.dispatchEvent(new CustomEvent('lina_d17_updated', { detail: clean }));
-    } catch {}
-
-    try {
-      await fetch('/api/settings/d17', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
-        },
-        body: JSON.stringify({
-          recipientPhone: clean,
-          adminPassword: 'aymen@2027',
-        }),
-      });
-    } catch {}
+    window.dispatchEvent(new CustomEvent('lina_d17_updated', { detail: clean }));
+    await saveD17SettingsToSupabase(clean);
   };
 
-  // Save Categories handler
+  // Save Categories handler directly in Supabase
   const handleUpdateCategoriesWrapper = async (cats: Category[]) => {
     setLocalCategories(cats);
-    try {
-      localStorage.setItem('lina_shop_categories', JSON.stringify(cats));
-    } catch {}
     if (onUpdateCategories) onUpdateCategories(cats);
-
-    try {
-      await fetch('/api/categories', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
-        },
-        body: JSON.stringify({ categories: cats }),
-      });
-    } catch {}
+    await saveCategoriesToSupabase(cats);
   };
 
-  // Save Homepage handler
+  // Save Homepage handler directly in Supabase
   const handleSaveHomepage = async (settings: HomepageSettings) => {
     if (onUpdateHomepageSettings) onUpdateHomepageSettings(settings);
-    try {
-      localStorage.setItem('lina_shop_homepage_settings', JSON.stringify(settings));
-    } catch {}
-
-    try {
-      await fetch('/api/settings/homepage', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
-        },
-        body: JSON.stringify(settings),
-      });
-    } catch {}
+    await saveStoreSettingToSupabase('homepage', settings);
   };
 
-  // Save Website handler
+  // Save Website handler directly in Supabase
   const handleSaveWebsite = async (settings: WebsiteSettings) => {
     setLocalWebsiteSettings(settings);
     if (onUpdateWebsiteSettings) onUpdateWebsiteSettings(settings);
-    try {
-      localStorage.setItem('lina_shop_website_settings', JSON.stringify(settings));
-    } catch {}
-
-    try {
-      await fetch('/api/settings/website', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
-        },
-        body: JSON.stringify(settings),
-      });
-    } catch {}
+    await saveStoreSettingToSupabase('website', settings);
   };
 
-  // Save Theme handler
+  // Save Theme handler directly in Supabase
   const handleSaveTheme = async (settings: ThemeSettings) => {
     setLocalThemeSettings(settings);
     if (onUpdateThemeSettings) onUpdateThemeSettings(settings);
-    try {
-      localStorage.setItem('lina_shop_theme_settings', JSON.stringify(settings));
-    } catch {}
-
-    try {
-      await fetch('/api/settings/theme', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
-        },
-        body: JSON.stringify(settings),
-      });
-    } catch {}
+    await saveStoreSettingToSupabase('theme', settings);
   };
 
-  // Save Delivery handler
+  // Save Delivery handler directly in Supabase
   const handleSaveDelivery = async (settings: DeliverySettings) => {
     setLocalDeliverySettings(settings);
     if (onUpdateDeliverySettings) onUpdateDeliverySettings(settings);
-    try {
-      localStorage.setItem('lina_shop_delivery_settings', JSON.stringify(settings));
-    } catch {}
-
-    try {
-      await fetch('/api/settings/delivery', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
-        },
-        body: JSON.stringify(settings),
-      });
-    } catch {}
+    await saveStoreSettingToSupabase('delivery', settings);
   };
 
-  // Save Content handler
+  // Save Content handler directly in Supabase
   const handleSaveContent = async (settings: ContentSettings) => {
     setLocalContentSettings(settings);
     if (onUpdateContentSettings) onUpdateContentSettings(settings);
-    try {
-      localStorage.setItem('lina_shop_content_settings', JSON.stringify(settings));
-    } catch {}
-
-    try {
-      await fetch('/api/settings/content', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
-        },
-        body: JSON.stringify(settings),
-      });
-    } catch {}
+    await saveStoreSettingToSupabase('content', settings);
   };
 
-  // Save SEO handler
+  // Save SEO handler directly in Supabase
   const handleSaveSEO = async (settings: SEOSettings) => {
     setLocalSeoSettings(settings);
     if (onUpdateSEOSettings) onUpdateSEOSettings(settings);
-    try {
-      localStorage.setItem('lina_shop_seo_settings', JSON.stringify(settings));
-    } catch {}
-
-    try {
-      await fetch('/api/settings/seo', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
-        },
-        body: JSON.stringify(settings),
-      });
-    } catch {}
+    await saveStoreSettingToSupabase('seo', settings);
   };
 
-  // Promotions handlers
-  const handleAddPromotionWrapper = (promo: Promotion) => {
+  // Promotions handlers directly in Supabase
+  const handleAddPromotionWrapper = async (promo: Promotion) => {
     const updated = [...localPromotions, promo];
     setLocalPromotions(updated);
-    try {
-      localStorage.setItem('lina_shop_promotions', JSON.stringify(updated));
-    } catch {}
     if (onAddPromotion) onAddPromotion(promo);
-
-    fetch('/api/promotions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
-      },
-      body: JSON.stringify(promo),
-    }).catch(() => {});
+    await saveStoreSettingToSupabase('promotions', updated);
   };
 
-  const handleDeletePromotionWrapper = (id: string) => {
+  const handleDeletePromotionWrapper = async (id: string) => {
     const updated = localPromotions.filter((p) => p.id !== id);
     setLocalPromotions(updated);
-    try {
-      localStorage.setItem('lina_shop_promotions', JSON.stringify(updated));
-    } catch {}
     if (onDeletePromotion) onDeletePromotion(id);
-
-    fetch(`/api/promotions/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
-      },
-    }).catch(() => {});
+    await saveStoreSettingToSupabase('promotions', updated);
   };
 
   // Password submission for Admin Login
@@ -482,7 +289,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     if (cleanPwd === 'aymen@2027') {
       setAuthError(false);
       setPassword('');
-      sessionStorage.setItem('admin_token', 'admin_authenticated_session_token');
       onLogin();
       return;
     }
@@ -497,7 +303,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({
       if (res.ok && data.success) {
         setAuthError(false);
         setPassword('');
-        sessionStorage.setItem('admin_token', data.token || 'admin_authenticated_session_token');
         onLogin();
         return;
       }

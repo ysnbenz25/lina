@@ -25,82 +25,31 @@ import { Toast } from './components/Toast';
 import { PERFUMES_DATA, DEFAULT_HOMEPAGE_SETTINGS } from './data/perfumes';
 import { Perfume, CartItem, Order, OrderStatus, HomepageSettings } from './types';
 import { CheckCircle2, Copy, ArrowLeft, Truck } from 'lucide-react';
+import {
+  fetchProductsFromSupabase,
+  saveProductToSupabase,
+  deleteProductFromSupabase,
+  fetchOrdersFromSupabase,
+  insertOrderToSupabase,
+  updateOrderStatusInSupabase,
+  fetchStoreSettingFromSupabase,
+  saveStoreSettingToSupabase,
+  seedSupabaseDefaults,
+} from './lib/supabaseStore';
 
 export default function App() {
-  // 1. Perfumes State (LocalStorage backed)
-  const [perfumes, setPerfumes] = useState<Perfume[]>(() => {
-    try {
-      const saved = localStorage.getItem('lina_shop_perfumes_react');
-      return saved ? JSON.parse(saved) : PERFUMES_DATA;
-    } catch {
-      return PERFUMES_DATA;
-    }
-  });
+  // 1. Perfumes State (Directly sourced from Supabase)
+  const [perfumes, setPerfumes] = useState<Perfume[]>(PERFUMES_DATA);
+  const [loading, setLoading] = useState(true);
 
-  // 2. Cart State (LocalStorage backed)
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('lina_shop_cart_react');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  // 2. Cart State (Transient in-memory session state)
+  const [cart, setCart] = useState<CartItem[]>([]);
 
-  // 3. Orders State (LocalStorage backed with realistic seed)
-  const [orders, setOrders] = useState<Order[]>(() => {
-    try {
-      const saved = localStorage.getItem('lina_shop_orders_react');
-      if (saved) return JSON.parse(saved);
-      return [
-        {
-          id: 'ORD-TN-784291',
-          trackingNumber: 'TN-784291',
-          customerName: 'سليم الماجري',
-          phone: '+216 98 123 456',
-          city: 'تونس (Tunis)',
-          delegation: 'المرسى',
-          address: 'إقامة النرجس - قمرت',
-          items: [{ ...PERFUMES_DATA[0], quantity: 1, selectedSize: '100 ml' }],
-          subtotal: 175,
-          shippingFee: 0,
-          total: 175,
-          status: 'shipped',
-          paymentMethod: 'cod',
-          createdAt: '2026-09-12',
-        },
-        {
-          id: 'ORD-TN-519283',
-          trackingNumber: 'TN-519283',
-          customerName: 'مريم الطرابلسي',
-          phone: '+216 55 987 654',
-          city: 'سوسة (Sousse)',
-          delegation: 'خزامة الغربية',
-          address: 'شارع الحبيب بورقيبة، عمارة الأمل',
-          items: [{ ...PERFUMES_DATA[1], quantity: 1, selectedSize: '100 ml' }],
-          subtotal: 280,
-          shippingFee: 0,
-          total: 280,
-          status: 'pending_verification',
-          paymentMethod: 'd17',
-          d17TransactionId: 'TXN-884210',
-          d17RecipientPhone: '+216 55 889 900',
-          createdAt: '2026-09-13',
-        },
-      ];
-    } catch {
-      return [];
-    }
-  });
+  // 3. Orders State (Directly sourced from Supabase)
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  // 4. Admin Login State (LocalStorage backed)
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('lina_shop_admin_react') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  // 4. Admin Login State (Transient in-memory session state)
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
 
   // 5. Navigation, Filters & Modal States
   const [selectedCategory, setSelectedCategory] = useState<string>('الكل');
@@ -113,14 +62,10 @@ export default function App() {
   const [latestOrder, setLatestOrder] = useState<Order | null>(null);
   const [trackingSearchCode, setTrackingSearchCode] = useState<string>('');
 
-  // 6. Homepage & Store Settings (LocalStorage backed)
-  const [homepageSettings, setHomepageSettings] = useState<HomepageSettings>(() => {
-    try {
-      const saved = localStorage.getItem('lina_homepage_settings');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return DEFAULT_HOMEPAGE_SETTINGS as HomepageSettings;
-  });
+  // 6. Homepage & Store Settings (Directly sourced from Supabase)
+  const [homepageSettings, setHomepageSettings] = useState<HomepageSettings>(
+    DEFAULT_HOMEPAGE_SETTINGS as HomepageSettings
+  );
 
   // Toast System
   const [toast, setToast] = useState<{ show: boolean; title: string; message: string }>({
@@ -136,30 +81,50 @@ export default function App() {
     }, 3500);
   };
 
-  // Synchronize LocalStorage
+  // Load store data directly and solely from Supabase on mount
   useEffect(() => {
-    try {
-      localStorage.setItem('lina_shop_perfumes_react', JSON.stringify(perfumes));
-    } catch {}
-  }, [perfumes]);
+    let isMounted = true;
+    async function initSupabaseData() {
+      try {
+        setLoading(true);
+        const [loadedProducts, loadedOrders, loadedHomepage] = await Promise.all([
+          fetchProductsFromSupabase(),
+          fetchOrdersFromSupabase(),
+          fetchStoreSettingFromSupabase('homepage', DEFAULT_HOMEPAGE_SETTINGS),
+        ]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('lina_shop_cart_react', JSON.stringify(cart));
-    } catch {}
-  }, [cart]);
+        if (!isMounted) return;
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('lina_shop_orders_react', JSON.stringify(orders));
-    } catch {}
-  }, [orders]);
+        if (loadedProducts && loadedProducts.length > 0) {
+          setPerfumes(loadedProducts);
+        } else {
+          // If empty in Supabase, seed defaults
+          await seedSupabaseDefaults();
+          const seeded = await fetchProductsFromSupabase();
+          if (isMounted && seeded.length > 0) {
+            setPerfumes(seeded);
+          }
+        }
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('lina_shop_admin_react', isAdminLoggedIn ? 'true' : 'false');
-    } catch {}
-  }, [isAdminLoggedIn]);
+        if (loadedOrders && loadedOrders.length > 0) {
+          setOrders(loadedOrders);
+        }
+
+        if (loadedHomepage) {
+          setHomepageSettings(loadedHomepage as HomepageSettings);
+        }
+      } catch (err) {
+        console.error('Error loading data from Supabase:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    initSupabaseData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Cart operations
   const handleAddToCart = (perfume: Perfume, quantity = 1, selectedSize?: string) => {
@@ -210,30 +175,44 @@ export default function App() {
     setIsCheckoutOpen(true);
   };
 
-  // Order placement from Checkout
-  const handleOrderConfirmed = (newOrder: Order) => {
+  // Order placement from Checkout (Persisted directly to Supabase)
+  const handleOrderConfirmed = async (newOrder: Order) => {
     setOrders((prev) => [newOrder, ...prev]);
     setCart([]);
     setIsCheckoutOpen(false);
     setLatestOrder(newOrder);
 
+    // Save directly to Supabase
+    try {
+      await insertOrderToSupabase(newOrder);
+    } catch (err) {
+      console.error('Failed to save order in Supabase:', err);
+    }
+
     if (newOrder.paymentMethod === 'd17') {
       showToast(
-        'تم تسجيل طلب D17 بنجاح',
+        'تم تسجيل طلب D17 في Supabase',
         `حالة الطلب: معلق بانتظار التحقق من التحويل (كود التتبع: ${newOrder.trackingNumber})`
       );
     } else {
-      showToast('تم تأكيد الطلب بنجاح', `تم توليد كود التتبع التونسي: ${newOrder.trackingNumber}`);
+      showToast('تم تأكيد الطلب بنجاح', `تم حفظ الطلب في Supabase. كود التتبع: ${newOrder.trackingNumber}`);
     }
   };
 
-  // Product Admin Operations
-  const handleAddPerfume = (newPerfume: Perfume) => {
+  // Product Admin Operations (Direct Supabase)
+  const handleAddPerfume = async (newPerfume: Perfume) => {
     setPerfumes((prev) => [newPerfume, ...prev]);
-    showToast('تمت الإضافة', `تمت إضافة عطر "${newPerfume.arabicName}" للمتجر وقاعدة البيانات.`);
+    showToast('جاري الحفظ', `جاري حفظ عطر "${newPerfume.arabicName}" في Supabase...`);
+    try {
+      await saveProductToSupabase(newPerfume);
+      showToast('تمت الإضافة بنجاح', `تم حفظ عطر "${newPerfume.arabicName}" في Supabase.`);
+    } catch (err) {
+      console.error('Error adding perfume to Supabase:', err);
+      showToast('تنبيه', 'حدث خطأ في حفظ العطر إلى Supabase');
+    }
   };
 
-  const handleUpdatePerfume = (updatedPerfume: Perfume) => {
+  const handleUpdatePerfume = async (updatedPerfume: Perfume) => {
     setPerfumes((prev) =>
       prev.map((p) => (p.id === updatedPerfume.id ? updatedPerfume : p))
     );
@@ -245,35 +224,41 @@ export default function App() {
           : item
       )
     );
-    showToast('تم تحديث العطر', `تم حفظ بيانات وصورة عطر "${updatedPerfume.arabicName}" بنجاح.`);
+    try {
+      await saveProductToSupabase(updatedPerfume);
+      showToast('تم تحديث العطر', `تم حفظ بيانات وصورة عطر "${updatedPerfume.arabicName}" في Supabase.`);
+    } catch (err) {
+      console.error('Error updating perfume in Supabase:', err);
+    }
   };
 
-  const handleDeletePerfume = (id: number) => {
+  const handleDeletePerfume = async (id: number) => {
     setPerfumes((prev) => prev.filter((p) => p.id !== id));
-    showToast('تم الحذف', 'تم حذف العطر من المتجر وقاعدة البيانات.');
+    try {
+      await deleteProductFromSupabase(id);
+      showToast('تم الحذف', 'تم حذف العطر من قاعدة بيانات Supabase.');
+    } catch (err) {
+      console.error('Error deleting perfume from Supabase:', err);
+    }
   };
 
-  const handleResetDefaultPerfumes = () => {
+  const handleResetDefaultPerfumes = async () => {
     setPerfumes(PERFUMES_DATA);
-    showToast('تمت الاستعادة', 'تمت استعادة كتالوج العطور الفاخرة الأساسية بنجاح.');
+    await seedSupabaseDefaults();
+    showToast('تمت الاستعادة', 'تمت استعادة كتالوج العطور الفاخرة في Supabase.');
   };
 
-  const handleUpdateOrderStatus = (trackingNumber: string, status: OrderStatus) => {
+  const handleUpdateOrderStatus = async (trackingNumber: string, status: OrderStatus) => {
     setOrders((prev) =>
       prev.map((o) => (o.trackingNumber === trackingNumber ? { ...o, status } : o))
     );
 
-    // Sync to backend API if available
-    fetch(`/api/orders/${trackingNumber}/status`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-admin-token': sessionStorage.getItem('admin_token') || 'admin_authenticated_session_token',
-      },
-      body: JSON.stringify({ status, adminPassword: 'aymen@2027' }),
-    }).catch(() => {});
-
-    showToast('تم تحديث الشحنة', `تم تغيير حالة الطلب (${trackingNumber}) بنجاح.`);
+    try {
+      await updateOrderStatusInSupabase(trackingNumber, status);
+      showToast('تم تحديث الشحنة', `تم تحديث حالة الطلب (${trackingNumber}) في Supabase.`);
+    } catch (err) {
+      console.error('Error updating order status in Supabase:', err);
+    }
   };
 
   const totalCartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -309,9 +294,7 @@ export default function App() {
           homepageSettings={homepageSettings}
           onUpdateHomepageSettings={(s) => {
             setHomepageSettings(s);
-            try {
-              localStorage.setItem('lina_homepage_settings', JSON.stringify(s));
-            } catch {}
+            saveStoreSettingToSupabase('homepage', s);
           }}
         />
         <Toast show={toast.show} title={toast.title} message={toast.message} />

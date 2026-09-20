@@ -1,5 +1,5 @@
 -- =========================================================================
--- LINA SHOP - SUPABASE DATABASE SCHEMA
+-- LINA SHOP - SUPABASE DATABASE & STORAGE SCHEMA
 -- Execute this SQL in your Supabase Project Dashboard -> SQL Editor
 -- URL: https://jkdwpnmcnidfftebypet.supabase.co
 -- =========================================================================
@@ -13,13 +13,17 @@ CREATE TABLE IF NOT EXISTS public.orders (
   city TEXT NOT NULL,
   delegation TEXT,
   address TEXT NOT NULL,
+  order_notes TEXT,
   perfume_id TEXT NOT NULL,
   perfume_name TEXT NOT NULL,
   perfume_arabic_name TEXT,
   quantity INTEGER NOT NULL DEFAULT 1,
+  subtotal NUMERIC DEFAULT 0,
+  shipping_fee NUMERIC DEFAULT 0,
   total NUMERIC NOT NULL,
   payment_method TEXT NOT NULL,
   d17_tx_id TEXT,
+  d17_recipient_phone TEXT,
   status TEXT NOT NULL DEFAULT 'pending',
   client_ip TEXT,
   user_id TEXT,
@@ -27,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Index for tracking lookup
+-- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_orders_tracking_number ON public.orders (tracking_number);
 CREATE INDEX IF NOT EXISTS idx_orders_phone ON public.orders (phone);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders (created_at DESC);
@@ -44,13 +48,13 @@ CREATE TABLE IF NOT EXISTS public.d17_settings (
 -- Insert initial D17 settings if not existing
 INSERT INTO public.d17_settings (recipient_phone, recipient_name, instructions)
 VALUES (
-  '+216 55 889 900',
+  '+216 27610626',
   'متجر لينا شوب - Lina Shop Perfumes',
-  'يرجى إرسال المبلغ الإجمالي عبر تطبيق D17 التابع للبريد التونسي إلى الرقم الموضح، ثم نسخ رقم المعاملة وإدراجه أدناه.'
+  'يرجى فتح تطبيق D17 التابع للبريد التونسي، واختيار "تحويل أموال"، ثم إدخال رقم الهاتف وإتمام المعاملة، ونسخ رقم العملية هنا.'
 )
 ON CONFLICT DO NOTHING;
 
--- 3. Store CMS Settings Table
+-- 3. Store CMS Settings Table (Homepage, Website, Theme, Delivery/Shipping, Content, SEO, Promotions, Categories)
 CREATE TABLE IF NOT EXISTS public.store_settings (
   id BIGSERIAL PRIMARY KEY,
   settings_key TEXT NOT NULL UNIQUE,
@@ -58,7 +62,7 @@ CREATE TABLE IF NOT EXISTS public.store_settings (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 4. Users Table (Customer & Admin accounts)
+-- 4. Users & Customers Table
 CREATE TABLE IF NOT EXISTS public.users (
   id BIGSERIAL PRIMARY KEY,
   uid TEXT NOT NULL UNIQUE,
@@ -78,20 +82,30 @@ CREATE TABLE IF NOT EXISTS public.products (
   original_price NUMERIC,
   category TEXT NOT NULL,
   image TEXT NOT NULL,
-  description TEXT,
-  in_stock BOOLEAN DEFAULT TRUE,
-  volume TEXT,
+  gallery JSONB,
+  sizes JSONB,
+  gender TEXT DEFAULT 'unisex',
   badge TEXT,
-  top_note TEXT,
-  heart_note TEXT,
-  base_note TEXT,
-  longevity TEXT,
-  sillage TEXT,
-  season TEXT,
-  rating TEXT,
-  reviews_count INTEGER DEFAULT 0,
+  fragrance_type TEXT,
+  inspired_by TEXT,
+  volume TEXT,
+  description TEXT,
+  notes JSONB,
+  in_stock BOOLEAN DEFAULT TRUE,
+  is_active BOOLEAN DEFAULT TRUE,
+  is_bestseller BOOLEAN DEFAULT FALSE,
+  is_new BOOLEAN DEFAULT FALSE,
+  is_special_offer BOOLEAN DEFAULT FALSE,
+  is_featured BOOLEAN DEFAULT TRUE,
+  rating NUMERIC DEFAULT 5.0,
+  reviews_count INTEGER DEFAULT 1,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- 6. Supabase Storage Bucket for Product Images
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('products', 'products', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
 
 -- =========================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
@@ -103,28 +117,58 @@ ALTER TABLE public.store_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
--- Allow public read of products
-CREATE POLICY "Public can view products"
-  ON public.products FOR SELECT
-  USING (true);
+-- Products Policies
+DROP POLICY IF EXISTS "Public can view products" ON public.products;
+CREATE POLICY "Public can view products" ON public.products FOR SELECT USING (true);
 
--- Allow public read of active store settings & D17 settings
-CREATE POLICY "Public can view D17 settings"
-  ON public.d17_settings FOR SELECT
-  USING (true);
+DROP POLICY IF EXISTS "Public can insert products" ON public.products;
+CREATE POLICY "Public can insert products" ON public.products FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Public can view store settings"
-  ON public.store_settings FOR SELECT
-  USING (true);
+DROP POLICY IF EXISTS "Public can update products" ON public.products;
+CREATE POLICY "Public can update products" ON public.products FOR UPDATE USING (true) WITH CHECK (true);
 
--- Allow public creation of orders (Checkout)
-CREATE POLICY "Public can place orders"
-  ON public.orders FOR INSERT
-  WITH CHECK (true);
+DROP POLICY IF EXISTS "Public can delete products" ON public.products;
+CREATE POLICY "Public can delete products" ON public.products FOR DELETE USING (true);
 
--- Allow order tracking lookup by tracking number
-CREATE POLICY "Public can track order by tracking number"
-  ON public.orders FOR SELECT
-  USING (true);
+-- Orders Policies
+DROP POLICY IF EXISTS "Public can place orders" ON public.orders;
+CREATE POLICY "Public can place orders" ON public.orders FOR INSERT WITH CHECK (true);
 
--- Service Role Key retains full bypass & unrestricted read/write on all tables!
+DROP POLICY IF EXISTS "Public can view orders" ON public.orders;
+CREATE POLICY "Public can view orders" ON public.orders FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public can update orders" ON public.orders;
+CREATE POLICY "Public can update orders" ON public.orders FOR UPDATE USING (true) WITH CHECK (true);
+
+-- Store Settings Policies (Shipping, Delivery, Theme, Homepage, CMS)
+DROP POLICY IF EXISTS "Public can view store settings" ON public.store_settings;
+CREATE POLICY "Public can view store settings" ON public.store_settings FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public can insert store settings" ON public.store_settings;
+CREATE POLICY "Public can insert store settings" ON public.store_settings FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public can update store settings" ON public.store_settings;
+CREATE POLICY "Public can update store settings" ON public.store_settings FOR UPDATE USING (true) WITH CHECK (true);
+
+-- D17 Settings Policies
+DROP POLICY IF EXISTS "Public can view D17 settings" ON public.d17_settings;
+CREATE POLICY "Public can view D17 settings" ON public.d17_settings FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public can insert D17 settings" ON public.d17_settings;
+CREATE POLICY "Public can insert D17 settings" ON public.d17_settings FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public can update D17 settings" ON public.d17_settings;
+CREATE POLICY "Public can update D17 settings" ON public.d17_settings FOR UPDATE USING (true) WITH CHECK (true);
+
+-- Storage Objects Policies (Bucket 'products')
+DROP POLICY IF EXISTS "Public can read product images" ON storage.objects;
+CREATE POLICY "Public can read product images" ON storage.objects FOR SELECT USING (bucket_id = 'products');
+
+DROP POLICY IF EXISTS "Public can upload product images" ON storage.objects;
+CREATE POLICY "Public can upload product images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'products');
+
+DROP POLICY IF EXISTS "Public can update product images" ON storage.objects;
+CREATE POLICY "Public can update product images" ON storage.objects FOR UPDATE USING (bucket_id = 'products');
+
+DROP POLICY IF EXISTS "Public can delete product images" ON storage.objects;
+CREATE POLICY "Public can delete product images" ON storage.objects FOR DELETE USING (bucket_id = 'products');

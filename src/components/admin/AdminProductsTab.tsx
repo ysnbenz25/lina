@@ -21,6 +21,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { Perfume, ProductSizeOption, Category } from '../../types';
+import { uploadProductImageToSupabase } from '../../lib/supabaseStore';
 
 interface AdminProductsTabProps {
   perfumes: Perfume[];
@@ -94,7 +95,7 @@ export const AdminProductsTab: React.FC<AdminProductsTabProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadStatus, setUploadStatus] = useState<string>('');
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -103,15 +104,17 @@ export const AdminProductsTab: React.FC<AdminProductsTabProps> = ({
       return;
     }
 
-    setUploadStatus('جاري معالجة الصورة...');
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      setImageUrl(base64);
-      setUploadStatus('تم تحميل الصورة بنجاح!');
-      setTimeout(() => setUploadStatus(''), 3000);
-    };
-    reader.readAsDataURL(file);
+    setUploadStatus('جاري الرفع إلى Supabase Storage...');
+    try {
+      const publicUrl = await uploadProductImageToSupabase(file);
+      setImageUrl(publicUrl);
+      setUploadStatus('تم رفع الصورة إلى Supabase Storage بنجاح!');
+      setTimeout(() => setUploadStatus(''), 3500);
+    } catch (err) {
+      console.error('Upload failed:', err);
+      setUploadStatus('حدث خطأ أثناء الرفع إلى Supabase');
+      setTimeout(() => setUploadStatus(''), 3500);
+    }
   };
 
   const openAddModal = () => {

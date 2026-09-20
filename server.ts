@@ -330,7 +330,7 @@ function loadD17SettingsFromDisk() {
     console.warn('Failed to load d17 settings from disk:', err);
   }
   return {
-    recipientPhone: '+216 55 889 900',
+    recipientPhone: '+216 27610626',
     recipientName: 'Lina Shop - متجر لينا للعطور',
     instructions: 'يرجى فتح تطبيق D17 التابع للبريد التونسي، واختيار "تحويل أموال"، ثم إدخال رقم الهاتف وإتمام المعاملة، ونسخ رقم العملية هنا.'
   };
