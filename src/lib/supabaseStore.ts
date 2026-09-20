@@ -27,7 +27,7 @@ export async function fetchProductsFromSupabase(): Promise<Perfume[]> {
       .order('id', { ascending: true });
 
     if (error) {
-      console.warn('Supabase products fetch warning:', error.message);
+      console.error('Supabase products fetch error:', error);
       return PERFUMES_DATA;
     }
 
@@ -40,72 +40,73 @@ export async function fetchProductsFromSupabase(): Promise<Perfume[]> {
         category: row.category,
         price: Number(row.price),
         originalPrice: Number(row.original_price || row.price),
-        volume: row.volume || '30 ml',
+        volume: row.volume || '100 ml',
         rating: Number(row.rating || 5.0),
         reviewsCount: Number(row.reviews_count || 1),
         image: row.image,
-        gallery: Array.isArray(row.gallery) ? row.gallery : [row.image],
-        sizes: Array.isArray(row.sizes) ? row.sizes : ['30 ml', '50 ml', '100 ml'],
-        sizeOptions: row.sizes_options || row.size_options || undefined,
-        fragranceType: row.fragrance_type || '',
-        inspiredBy: row.inspired_by || '',
-        gender: row.gender || 'unisex',
-        isSpecialOffer: Boolean(row.is_special_offer),
-        isFeatured: Boolean(row.is_featured ?? true),
-        isBestseller: Boolean(row.is_bestseller),
-        isNew: Boolean(row.is_new),
-        isMostDemanded: Boolean(row.is_most_demanded),
-        isActive: row.is_active !== false,
-        stock: Number(row.stock || 20),
-        sku: row.sku || `LINA-${row.id}`,
+        gallery: [row.image],
+        sizes: ['30 ml', '50 ml', '100 ml'],
+        sizeOptions: [
+          { size: '30 ml', price: Math.round(Number(row.price) * 0.4), originalPrice: Math.round(Number(row.original_price || row.price) * 0.4) },
+          { size: '50 ml', price: Math.round(Number(row.price) * 0.65), originalPrice: Math.round(Number(row.original_price || row.price) * 0.65) },
+          { size: row.volume || '100 ml', price: Number(row.price), originalPrice: Number(row.original_price || row.price) },
+        ],
+        fragranceType: 'Eau de Parfum',
+        inspiredBy: '',
+        gender: 'unisex',
+        isSpecialOffer: Boolean(row.badge && row.badge.includes('عرض')),
+        isFeatured: true,
+        isBestseller: Boolean(row.badge && row.badge.includes('الأكثر مبيعاً')),
+        isNew: Boolean(row.badge && row.badge.includes('جديد')),
+        isMostDemanded: false,
+        isActive: true,
+        stock: 25,
+        sku: `LINA-${row.id}`,
         description: row.description || '',
-        notes: row.notes || {
+        notes: {
           top: row.top_note || 'حمضيات منعشة',
           heart: row.heart_note || 'زهور نادرة وتوابل',
           base: row.base_note || 'أخشاب وعنبر ومسك',
         },
+        longevity: row.longevity || 'يدوم أكثر من 18 ساعة',
+        sillage: row.sillage || 'قوي ونفاذ جداً',
+        season: row.season || 'جميع الفصول / مناسبات خاصة',
         inStock: row.in_stock !== false,
       }));
     }
 
-    // Seed Supabase with initial products if table is currently empty
-    seedInitialProductsToSupabase().catch(() => {});
-    return PERFUMES_DATA;
+    return [];
   } catch (err) {
     console.error('Error fetching products from Supabase:', err);
-    return PERFUMES_DATA;
+    return [];
   }
 }
 
 export async function saveProductToSupabase(perfume: Perfume): Promise<Perfume> {
+  // Map strictly to existing columns in public.products
   const row = {
     id: String(perfume.id),
-    name: perfume.name,
-    arabic_name: perfume.arabicName,
-    badge: perfume.badge || '',
-    category: perfume.category,
-    price: perfume.price,
-    original_price: perfume.originalPrice,
-    volume: perfume.volume,
-    rating: perfume.rating || 5.0,
-    reviews_count: perfume.reviewsCount || 1,
-    image: perfume.image,
-    gallery: perfume.gallery || [perfume.image],
-    sizes: perfume.sizes || ['30 ml', '50 ml', '100 ml'],
-    gender: perfume.gender || 'unisex',
-    fragrance_type: perfume.fragranceType || '',
-    inspired_by: perfume.inspiredBy || '',
-    is_special_offer: Boolean(perfume.isSpecialOffer),
-    is_featured: Boolean(perfume.isFeatured),
-    is_bestseller: Boolean(perfume.isBestseller),
-    is_new: Boolean(perfume.isNew),
-    is_active: perfume.isActive !== false,
+    name: perfume.name?.trim() || perfume.arabicName?.trim() || 'عطر فاخر',
+    arabic_name: perfume.arabicName?.trim() || perfume.name?.trim() || 'عطر فاخر',
+    price: Number(perfume.price) || 16,
+    original_price: perfume.originalPrice ? Number(perfume.originalPrice) : null,
+    category: perfume.category || 'عطور شرقية وفخمة',
+    image: perfume.image || 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600',
+    description: perfume.description || null,
     in_stock: perfume.inStock !== false,
-    description: perfume.description || '',
-    notes: perfume.notes || { top: '', heart: '', base: '' },
-    stock: perfume.stock || 25,
-    sku: perfume.sku || `LINA-${perfume.id}`,
+    volume: perfume.volume || '100 ml',
+    badge: perfume.badge || null,
+    top_note: perfume.notes?.top || null,
+    heart_note: perfume.notes?.heart || null,
+    base_note: perfume.notes?.base || null,
+    longevity: perfume.longevity || 'يدوم أكثر من 18 ساعة',
+    sillage: perfume.sillage || 'قوي ونفاذ جداً',
+    season: perfume.season || 'جميع الفصول / مناسبات خاصة',
+    rating: perfume.rating ? Number(perfume.rating) : 5.0,
+    reviews_count: perfume.reviewsCount ? Number(perfume.reviewsCount) : 1,
   };
+
+  console.log('[Supabase] Inserting/Upserting product to public.products:', row);
 
   const { data, error } = await supabase
     .from('products')
@@ -114,72 +115,66 @@ export async function saveProductToSupabase(perfume: Perfume): Promise<Perfume> 
     .single();
 
   if (error) {
-    console.warn('Supabase product upsert warning:', error.message);
-    // Also proxy to /api/products for server-level persistence
-    try {
-      await fetch(`/api/products/${perfume.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(perfume),
-      });
-    } catch {}
+    console.error('[Supabase Error] Products INSERT/UPDATE failed:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    throw new Error(`خطأ Supabase (${error.code}): ${error.message}${error.details ? ` - ${error.details}` : ''}`);
   }
 
+  console.log('[Supabase] Product saved successfully in public.products:', data);
   return perfume;
 }
 
 export async function deleteProductFromSupabase(id: number | string): Promise<boolean> {
-  try {
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', String(id));
+  console.log('[Supabase] Deleting product from public.products with id:', id);
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', String(id));
 
-    if (error) {
-      console.warn('Supabase product delete warning:', error.message);
-      await fetch(`/api/products/${id}`, { method: 'DELETE' });
-    }
-    return true;
-  } catch (err) {
-    console.error('Error deleting product from Supabase:', err);
-    return false;
+  if (error) {
+    console.error('[Supabase Error] Products DELETE failed:', error);
+    throw new Error(`خطأ Supabase عند الحذف (${error.code}): ${error.message}`);
   }
+
+  console.log('[Supabase] Product deleted successfully from public.products');
+  return true;
 }
 
-// Seed initial perfume items into Supabase
-export async function seedInitialProductsToSupabase() {
-  try {
-    const rows = PERFUMES_DATA.map((p) => ({
-      id: String(p.id),
-      name: p.name,
-      arabic_name: p.arabicName,
-      badge: p.badge || '',
-      category: p.category,
-      price: p.price,
-      original_price: p.originalPrice,
-      volume: p.volume,
-      rating: p.rating || 5.0,
-      reviews_count: p.reviewsCount || 1,
-      image: p.image,
-      gallery: p.gallery || [p.image],
-      sizes: p.sizes || ['30 ml', '50 ml', '100 ml'],
-      gender: p.gender || 'unisex',
-      fragrance_type: p.fragranceType || '',
-      inspired_by: p.inspiredBy || '',
-      is_special_offer: Boolean(p.isSpecialOffer),
-      is_featured: Boolean(p.isFeatured),
-      is_bestseller: Boolean(p.isBestseller),
-      is_new: Boolean(p.isNew),
-      is_active: p.isActive !== false,
-      in_stock: p.inStock !== false,
-      description: p.description || '',
-      notes: p.notes || { top: '', heart: '', base: '' },
-      stock: p.stock || 25,
-      sku: p.sku || `LINA-${p.id}`,
-    }));
+// Seed initial perfume items into Supabase with exact public.products columns
+export async function seedInitialProductsToSupabase(): Promise<void> {
+  const rows = PERFUMES_DATA.map((p) => ({
+    id: String(p.id),
+    name: p.name?.trim() || p.arabicName?.trim() || 'عطر فاخر',
+    arabic_name: p.arabicName?.trim() || p.name?.trim() || 'عطر فاخر',
+    price: Number(p.price) || 16,
+    original_price: p.originalPrice ? Number(p.originalPrice) : null,
+    category: p.category || 'عطور شرقية وفخمة',
+    image: p.image,
+    description: p.description || null,
+    in_stock: p.inStock !== false,
+    volume: p.volume || '100 ml',
+    badge: p.badge || null,
+    top_note: p.notes?.top || null,
+    heart_note: p.notes?.heart || null,
+    base_note: p.notes?.base || null,
+    longevity: p.longevity || 'يدوم أكثر من 18 ساعة',
+    sillage: p.sillage || 'قوي ونفاذ جداً',
+    season: p.season || 'جميع الفصول / مناسبات خاصة',
+    rating: p.rating ? Number(p.rating) : 5.0,
+    reviews_count: p.reviewsCount ? Number(p.reviewsCount) : 1,
+  }));
 
-    await supabase.from('products').upsert(rows, { onConflict: 'id' });
-  } catch {}
+  console.log('[Supabase] Seeding default products to public.products count:', rows.length);
+  const { error } = await supabase.from('products').upsert(rows, { onConflict: 'id' });
+  if (error) {
+    console.error('[Supabase Error] Seeding products failed:', error);
+    throw new Error(`فشل استعادة العطور في Supabase: ${error.message}`);
+  }
+  console.log('[Supabase] Products successfully seeded into public.products');
 }
 
 export const seedSupabaseDefaults = seedInitialProductsToSupabase;

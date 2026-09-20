@@ -49,6 +49,9 @@ export interface Perfume {
   notes: PerfumeNote;
   inStock?: boolean;
   batchCode?: string;
+  longevity?: string;
+  sillage?: string;
+  season?: string;
 }
 
 export interface CartItem extends Perfume {

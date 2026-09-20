@@ -201,51 +201,65 @@ export default function App() {
 
   // Product Admin Operations (Direct Supabase)
   const handleAddPerfume = async (newPerfume: Perfume) => {
-    setPerfumes((prev) => [newPerfume, ...prev]);
     showToast('جاري الحفظ', `جاري حفظ عطر "${newPerfume.arabicName}" في Supabase...`);
     try {
       await saveProductToSupabase(newPerfume);
-      showToast('تمت الإضافة بنجاح', `تم حفظ عطر "${newPerfume.arabicName}" في Supabase.`);
-    } catch (err) {
-      console.error('Error adding perfume to Supabase:', err);
-      showToast('تنبيه', 'حدث خطأ في حفظ العطر إلى Supabase');
+      setPerfumes((prev) => [newPerfume, ...prev]);
+      showToast('تمت الإضافة بنجاح', `تم حفظ عطر "${newPerfume.arabicName}" في جدول public.products.`);
+    } catch (err: any) {
+      console.error('[App] Error adding perfume to Supabase:', err);
+      showToast('خطأ في Supabase', err.message || 'فشل حفظ العطر في قاعدة البيانات');
+      throw err;
     }
   };
 
   const handleUpdatePerfume = async (updatedPerfume: Perfume) => {
-    setPerfumes((prev) =>
-      prev.map((p) => (p.id === updatedPerfume.id ? updatedPerfume : p))
-    );
-    // Also update in cart
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === updatedPerfume.id
-          ? { ...updatedPerfume, quantity: item.quantity }
-          : item
-      )
-    );
+    showToast('جاري التحديث', `جاري تحديث عطر "${updatedPerfume.arabicName}" في Supabase...`);
     try {
       await saveProductToSupabase(updatedPerfume);
-      showToast('تم تحديث العطر', `تم حفظ بيانات وصورة عطر "${updatedPerfume.arabicName}" في Supabase.`);
-    } catch (err) {
-      console.error('Error updating perfume in Supabase:', err);
+      setPerfumes((prev) =>
+        prev.map((p) => (p.id === updatedPerfume.id ? updatedPerfume : p))
+      );
+      // Also update in cart
+      setCart((prev) =>
+        prev.map((item) =>
+          item.id === updatedPerfume.id
+            ? { ...updatedPerfume, quantity: item.quantity }
+            : item
+        )
+      );
+      showToast('تم تحديث العطر', `تم حفظ بيانات عطر "${updatedPerfume.arabicName}" في Supabase.`);
+    } catch (err: any) {
+      console.error('[App] Error updating perfume in Supabase:', err);
+      showToast('خطأ في Supabase', err.message || 'فشل تحديث العطر في قاعدة البيانات');
+      throw err;
     }
   };
 
   const handleDeletePerfume = async (id: number) => {
-    setPerfumes((prev) => prev.filter((p) => p.id !== id));
     try {
       await deleteProductFromSupabase(id);
+      setPerfumes((prev) => prev.filter((p) => p.id !== id));
       showToast('تم الحذف', 'تم حذف العطر من قاعدة بيانات Supabase.');
-    } catch (err) {
-      console.error('Error deleting perfume from Supabase:', err);
+    } catch (err: any) {
+      console.error('[App] Error deleting perfume from Supabase:', err);
+      showToast('خطأ في Supabase', err.message || 'فشل حذف العطر من Supabase');
+      throw err;
     }
   };
 
   const handleResetDefaultPerfumes = async () => {
-    setPerfumes(PERFUMES_DATA);
-    await seedSupabaseDefaults();
-    showToast('تمت الاستعادة', 'تمت استعادة كتالوج العطور الفاخرة في Supabase.');
+    showToast('جاري الاستعادة', 'جاري تهيئة كتالوج العطور في Supabase...');
+    try {
+      await seedSupabaseDefaults();
+      const loaded = await fetchProductsFromSupabase();
+      setPerfumes(loaded);
+      showToast('تمت الاستعادة', `تم حفظ ${loaded.length} عطر في جدول public.products.`);
+    } catch (err: any) {
+      console.error('[App] Error resetting perfumes in Supabase:', err);
+      showToast('خطأ في Supabase', err.message || 'فشل استعادة العطور في Supabase');
+      throw err;
+    }
   };
 
   const handleUpdateOrderStatus = async (trackingNumber: string, status: OrderStatus) => {

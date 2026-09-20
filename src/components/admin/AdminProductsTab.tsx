@@ -18,7 +18,8 @@ import {
   X,
   Package,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Loader2,
 } from 'lucide-react';
 import { Perfume, ProductSizeOption, Category } from '../../types';
 import { uploadProductImageToSupabase } from '../../lib/supabaseStore';
@@ -26,10 +27,10 @@ import { uploadProductImageToSupabase } from '../../lib/supabaseStore';
 interface AdminProductsTabProps {
   perfumes: Perfume[];
   categories: Category[];
-  onAddPerfume: (perfume: Perfume) => void;
-  onUpdatePerfume: (perfume: Perfume) => void;
-  onDeletePerfume: (id: number) => void;
-  onResetDefaultPerfumes: () => void;
+  onAddPerfume: (perfume: Perfume) => Promise<void> | void;
+  onUpdatePerfume: (perfume: Perfume) => Promise<void> | void;
+  onDeletePerfume: (id: number) => Promise<void> | void;
+  onResetDefaultPerfumes: () => Promise<void> | void;
 }
 
 export const AdminProductsTab: React.FC<AdminProductsTabProps> = ({
@@ -49,6 +50,8 @@ export const AdminProductsTab: React.FC<AdminProductsTabProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [supabaseError, setSupabaseError] = useState<string | null>(null);
 
   // Form states
   const [name, setName] = useState('');
@@ -118,6 +121,7 @@ export const AdminProductsTab: React.FC<AdminProductsTabProps> = ({
   };
 
   const openAddModal = () => {
+    setSupabaseError(null);
     setEditingId(null);
     setName('');
     setArabicName('');
@@ -154,6 +158,7 @@ export const AdminProductsTab: React.FC<AdminProductsTabProps> = ({
   };
 
   const openEditModal = (p: Perfume) => {
+    setSupabaseError(null);
     setEditingId(p.id);
     setName(p.name);
     setArabicName(p.arabicName);
@@ -220,57 +225,66 @@ export const AdminProductsTab: React.FC<AdminProductsTabProps> = ({
     setGalleryUrls(galleryUrls.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSupabaseError(null);
 
     if (!arabicName.trim() && !name.trim()) {
-      alert('يرجى إدخال اسم العطر بالعربية أو الفرنسية');
+      setSupabaseError('يرجى إدخال اسم العطر بالعربية أو الفرنسية');
       return;
     }
 
-    const defaultPrice = sizeOptions[0]?.price || Number(price) || 16;
-    const defaultOriginal = sizeOptions[0]?.originalPrice || Number(originalPrice) || 22;
+    setIsSubmitting(true);
+    try {
+      const defaultPrice = sizeOptions[0]?.price || Number(price) || 16;
+      const defaultOriginal = sizeOptions[0]?.originalPrice || Number(originalPrice) || 22;
 
-    const perfumePayload: Perfume = {
-      id: editingId || Date.now(),
-      name: name.trim() || arabicName.trim(),
-      arabicName: arabicName.trim() || name.trim(),
-      category,
-      gender,
-      badge,
-      fragranceType,
-      inspiredBy,
-      price: defaultPrice,
-      originalPrice: defaultOriginal,
-      volume,
-      sizes: sizeOptions.map(s => s.size),
-      sizeOptions,
-      rating: editingId ? (perfumes.find(p => p.id === editingId)?.rating || 4.9) : 5.0,
-      reviewsCount: editingId ? (perfumes.find(p => p.id === editingId)?.reviewsCount || 12) : 1,
-      image: imageUrl || 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=800&q=80',
-      gallery: galleryUrls.length > 0 ? galleryUrls : [imageUrl],
-      description,
-      notes: {
-        top: topNotes,
-        heart: heartNotes,
-        base: baseNotes,
-      },
-      inStock,
-      isActive,
-      isBestseller,
-      isNew,
-      isSpecialOffer,
-      isFeatured,
-      isMostDemanded,
-    };
+      const perfumePayload: Perfume = {
+        id: editingId || Date.now(),
+        name: name.trim() || arabicName.trim(),
+        arabicName: arabicName.trim() || name.trim(),
+        category,
+        gender,
+        badge,
+        fragranceType,
+        inspiredBy,
+        price: defaultPrice,
+        originalPrice: defaultOriginal,
+        volume,
+        sizes: sizeOptions.map(s => s.size),
+        sizeOptions,
+        rating: editingId ? (perfumes.find(p => p.id === editingId)?.rating || 4.9) : 5.0,
+        reviewsCount: editingId ? (perfumes.find(p => p.id === editingId)?.reviewsCount || 12) : 1,
+        image: imageUrl || 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=800&q=80',
+        gallery: galleryUrls.length > 0 ? galleryUrls : [imageUrl],
+        description,
+        notes: {
+          top: topNotes,
+          heart: heartNotes,
+          base: baseNotes,
+        },
+        inStock,
+        isActive,
+        isBestseller,
+        isNew,
+        isSpecialOffer,
+        isFeatured,
+        isMostDemanded,
+      };
 
-    if (editingId) {
-      onUpdatePerfume(perfumePayload);
-    } else {
-      onAddPerfume(perfumePayload);
+      if (editingId) {
+        await onUpdatePerfume(perfumePayload);
+      } else {
+        await onAddPerfume(perfumePayload);
+      }
+
+      setIsModalOpen(false);
+    } catch (err: any) {
+      console.error('[AdminProductsTab Error] Failed to save product to Supabase:', err);
+      setSupabaseError(err.message || 'حدث خطأ أثناء حفظ المنتج في Supabase');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsModalOpen(false);
   };
 
   // Filtered perfumes
@@ -918,16 +932,34 @@ export const AdminProductsTab: React.FC<AdminProductsTabProps> = ({
                 </div>
               </div>
 
+              {/* Real Supabase Error Banner if any */}
+              {supabaseError && (
+                <div className="p-3.5 bg-rose-950/70 border border-rose-500/70 rounded-xl text-rose-200 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-bold">فشل الحفظ في قاعدة بيانات Supabase (public.products):</p>
+                    <p className="font-mono text-[11px] mt-1 break-all text-rose-300">{supabaseError}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Submit Buttons */}
               <div className="flex gap-3 pt-6 border-t border-[#D8C8B8]/20">
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-[#D6B56A] hover:bg-[#E5CA8A] text-[#241B18] font-bold text-xs rounded-xl transition-all shadow-lg cursor-pointer"
+                  disabled={isSubmitting}
+                  className="flex-1 py-3 bg-[#D6B56A] hover:bg-[#E5CA8A] disabled:opacity-50 text-[#241B18] font-bold text-xs rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {editingId ? 'حفظ التعديلات' : 'إضافة العطر للمتجر فورياً'}
+                  {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span>
+                    {isSubmitting
+                      ? 'جاري الحفظ في Supabase...'
+                      : (editingId ? 'حفظ التعديلات في Supabase' : 'إضافة العطر لـ Supabase فورياً')}
+                  </span>
                 </button>
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={() => setIsModalOpen(false)}
                   className="px-6 py-3 bg-[#332522] border border-[#D8C8B8]/20 hover:border-[#D8C8B8]/40 text-[#D8C8B8] text-xs font-bold rounded-xl transition-colors cursor-pointer"
                 >
