@@ -22,7 +22,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
   // Derive size options for dynamic pricing
   const sizeOptions = perfume?.sizeOptions && perfume.sizeOptions.length > 0
     ? perfume.sizeOptions
-    : (perfume?.sizes || ['5ml', '10ml', '20ml', '30ml', '50ml', '100ml']).map((s, idx) => ({
+    : (perfume?.sizes || ['30ml', '50ml', '100ml']).map((s, idx) => ({
         size: s,
         price: idx === 0 ? (perfume?.price || 16) : Math.round((perfume?.price || 16) * (1 + idx * 0.4)),
         originalPrice: perfume?.originalPrice ? Math.round(perfume.originalPrice * (1 + idx * 0.4)) : undefined,

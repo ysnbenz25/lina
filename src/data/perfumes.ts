@@ -1,9 +1,6 @@
 import { Perfume } from '../types';
 
 export const DEFAULT_SIZE_OPTIONS = [
-  { size: '5ml', price: 5, originalPrice: 8 },
-  { size: '10ml', price: 8, originalPrice: 12 },
-  { size: '20ml', price: 12, originalPrice: 16 },
   { size: '30ml', price: 16, originalPrice: 22 },
   { size: '50ml', price: 22, originalPrice: 30 },
   { size: '100ml', price: 35, originalPrice: 48 },

@@ -73,11 +73,11 @@ export async function fetchProductsFromSupabase(): Promise<Perfume[]> {
         reviewsCount: Number(row.reviews_count) || 1,
         image: imageUrl,
         gallery: [imageUrl],
-        sizes: ['30 ml', '50 ml', '100 ml'],
+        sizes: ['30ml', '50ml', '100ml'],
         sizeOptions: [
-          { size: '30 ml', price: Math.round(price * 0.45) || 8, originalPrice: Math.round(originalPrice * 0.45) || 12 },
-          { size: '50 ml', price: Math.round(price * 0.7) || 14, originalPrice: Math.round(originalPrice * 0.7) || 18 },
-          { size: String(row.volume || '100 ml'), price: price, originalPrice: originalPrice },
+          { size: '30ml', price: price, originalPrice: originalPrice },
+          { size: '50ml', price: Math.round(price * 1.375) || 22, originalPrice: originalPrice ? Math.round(originalPrice * 1.36) : undefined },
+          { size: '100ml', price: Math.round(price * 2.18) || 35, originalPrice: originalPrice ? Math.round(originalPrice * 2.18) : undefined },
         ],
         fragranceType: cat.includes('زيتي') ? 'عطر زيتي مركز' : 'تركيبة عطرية مستوحاة',
         inspiredBy: String(row.arabic_name || '').includes('مستوحاة من')
