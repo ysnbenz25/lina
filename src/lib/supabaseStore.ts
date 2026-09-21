@@ -262,11 +262,15 @@ export async function fetchOrdersFromSupabase(): Promise<Order[]> {
 
     if (error) {
       console.warn('Supabase orders fetch error:', error.message);
-      // Fallback to server API
-      const res = await fetch('/api/orders');
-      if (res.ok) {
-        const json = await res.json();
-        return json.orders || [];
+      // Fallback to server API if available
+      try {
+        const res = await fetch('/api/orders');
+        if (res.ok) {
+          const json = await res.json();
+          return json.orders || [];
+        }
+      } catch {
+        // ignore
       }
       return [];
     }
@@ -276,9 +280,25 @@ export async function fetchOrdersFromSupabase(): Promise<Order[]> {
     }
 
     return data.map((row: any) => {
-      let parsedItems = [];
+      let parsedItems: any[] = [];
+      let extraData: any = {};
       try {
-        parsedItems = typeof row.items === 'string' ? JSON.parse(row.items) : (row.items || []);
+        if (typeof row.items === 'string') {
+          const parsed = JSON.parse(row.items);
+          if (Array.isArray(parsed)) {
+            parsedItems = parsed;
+          } else if (parsed && typeof parsed === 'object') {
+            parsedItems = parsed.cartItems || [];
+            extraData = parsed;
+          }
+        } else if (row.items && typeof row.items === 'object') {
+          if (Array.isArray(row.items)) {
+            parsedItems = row.items;
+          } else {
+            parsedItems = row.items.cartItems || [];
+            extraData = row.items;
+          }
+        }
       } catch {
         parsedItems = [];
       }
@@ -291,7 +311,7 @@ export async function fetchOrdersFromSupabase(): Promise<Order[]> {
           price: Number(row.total) / (Number(row.quantity) || 1),
           quantity: Number(row.quantity) || 1,
           image: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=800&q=80',
-          volume: '30 ml',
+          volume: '50 ml',
           category: 'عطور فاخرة',
           badge: 'طلب مؤكد',
           originalPrice: Number(row.total),
@@ -302,6 +322,15 @@ export async function fetchOrdersFromSupabase(): Promise<Order[]> {
         }];
       }
 
+      const calculatedSubtotal = parsedItems.reduce(
+        (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
+        0
+      );
+      const subtotal = Number(extraData.subtotal || row.subtotal || calculatedSubtotal || row.total);
+      const shippingFee = Number(extraData.shippingFee || row.shipping_fee || (Number(row.total) > subtotal ? Number(row.total) - subtotal : 7));
+      const orderNotes = extraData.orderNotes || row.order_notes || undefined;
+      const d17RecipientPhone = extraData.d17RecipientPhone || row.d17_recipient_phone || undefined;
+
       return {
         id: String(row.id),
         trackingNumber: row.tracking_number,
@@ -311,14 +340,14 @@ export async function fetchOrdersFromSupabase(): Promise<Order[]> {
         city: row.city,
         delegation: row.delegation || '',
         items: parsedItems,
-        subtotal: Number(row.subtotal || row.total),
-        shippingFee: Number(row.shipping_fee || 0),
+        subtotal,
+        shippingFee,
         total: Number(row.total),
         status: (row.status || 'pending') as OrderStatus,
         paymentMethod: (row.payment_method || 'cod') as 'cod' | 'd17',
         d17TransactionId: row.d17_tx_id || undefined,
-        d17RecipientPhone: row.d17_recipient_phone || undefined,
-        orderNotes: row.order_notes || undefined,
+        d17RecipientPhone,
+        orderNotes,
         createdAt: row.created_at,
       };
     });
@@ -331,33 +360,51 @@ export async function fetchOrdersFromSupabase(): Promise<Order[]> {
 export async function insertOrderToSupabase(order: Order): Promise<boolean> {
   try {
     const primaryItem = order.items[0];
+
+    // Build structured extra info saved in items jsonb column to prevent schema mismatch errors
+    const itemsPayload = {
+      cartItems: order.items,
+      subtotal: order.subtotal,
+      shippingFee: order.shippingFee,
+      orderNotes: order.orderNotes || '',
+      d17RecipientPhone: order.d17RecipientPhone || ''
+    };
+
+    // Construct address string including notes and delegation for logistics clarity
+    let detailedAddress = order.address || '';
+    if (order.delegation && !detailedAddress.includes(order.delegation)) {
+      detailedAddress = `${order.delegation} - ${detailedAddress}`;
+    }
+    if (order.orderNotes && !detailedAddress.includes(order.orderNotes)) {
+      detailedAddress = `${detailedAddress} (ملاحظات: ${order.orderNotes})`;
+    }
+
     const row = {
       tracking_number: order.trackingNumber,
       customer_name: order.customerName,
       phone: order.phone,
       city: order.city,
       delegation: order.delegation || '',
-      address: order.address,
-      order_notes: order.orderNotes || null,
+      address: detailedAddress,
       perfume_id: String(primaryItem?.id || '1'),
       perfume_name: primaryItem?.name || 'Lina Perfume',
       perfume_arabic_name: primaryItem?.arabicName || primaryItem?.name || '',
       quantity: order.items.reduce((sum, item) => sum + item.quantity, 0) || 1,
-      subtotal: order.subtotal,
-      shipping_fee: order.shippingFee,
       total: order.total,
       payment_method: order.paymentMethod,
       d17_tx_id: order.d17TransactionId || null,
-      d17_recipient_phone: order.d17RecipientPhone || null,
-      status: order.status || 'pending',
-      items: order.items,
+      status: order.status || (order.paymentMethod === 'd17' ? 'pending_verification' : 'processing'),
+      items: itemsPayload,
     };
 
-    const { error } = await supabase.from('orders').insert(row);
+    const { data, error } = await supabase.from('orders').insert([row]).select();
     if (error) {
-      console.warn('Supabase direct order insert warning:', error.message);
+      console.error('Supabase direct order insert warning:', error.message, error.details);
+      return false;
     }
-    return !error;
+
+    console.log('[Supabase] Order inserted successfully into public.orders:', data?.[0]?.tracking_number || order.trackingNumber);
+    return true;
   } catch (err) {
     console.error('Error inserting order into Supabase:', err);
     return false;

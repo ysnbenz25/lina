@@ -99,6 +99,7 @@ interface AdminPageProps {
   onResetDefaultPerfumes: () => void;
   orders: Order[];
   onUpdateOrderStatus: (trackingNumber: string, status: OrderStatus) => void;
+  onRefreshOrders?: () => Promise<void> | void;
   onBackToStore: () => void;
   homepageSettings?: HomepageSettings;
   onUpdateHomepageSettings?: (settings: HomepageSettings) => void;
@@ -130,6 +131,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   onResetDefaultPerfumes,
   orders,
   onUpdateOrderStatus,
+  onRefreshOrders,
   onBackToStore,
   homepageSettings = DEFAULT_HOMEPAGE_CMS,
   onUpdateHomepageSettings,
@@ -541,6 +543,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
             <AdminOrdersTab
               orders={orders}
               onUpdateOrderStatus={onUpdateOrderStatus}
+              onRefreshOrders={onRefreshOrders}
             />
           )}
 

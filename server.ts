@@ -14,6 +14,7 @@ import { PERFUMES_DATA } from './src/data/perfumes';
 import { getSupabaseServerAdmin } from './src/lib/supabaseServer.ts';
 import {
   supabaseInsertOrder,
+  supabaseGetOrders,
   supabaseGetD17Settings,
   supabaseSaveD17Settings,
   supabaseGetOrCreateUser,
@@ -1358,7 +1359,53 @@ app.get('/api/customers', generalRateLimiter, requireAdmin, (_req: Request, res:
 });
 
 // GET /api/orders (List all orders for Admin / syncing)
-app.get('/api/orders', generalRateLimiter, (req: Request, res: Response) => {
+app.get('/api/orders', generalRateLimiter, async (_req: Request, res: Response) => {
+  try {
+    const dbOrders = await supabaseGetOrders();
+    if (dbOrders && dbOrders.length > 0) {
+      const formatted = dbOrders.map((row: any) => {
+        let items: any[] = [];
+        try {
+          const parsed = typeof row.items === 'string' ? JSON.parse(row.items) : (row.items || []);
+          items = Array.isArray(parsed) ? parsed : (parsed.cartItems || []);
+        } catch {
+          items = [];
+        }
+
+        return {
+          id: `ORD-TN-${row.id}`,
+          trackingNumber: row.tracking_number,
+          customerName: row.customer_name,
+          phone: row.phone,
+          city: row.city,
+          delegation: row.delegation || '',
+          address: row.address,
+          total: Number(row.total),
+          paymentMethod: row.payment_method || 'cod',
+          d17TransactionId: row.d17_tx_id || undefined,
+          status: row.status || 'pending',
+          createdAt: row.created_at,
+          items: items.length > 0 ? items : [{
+            id: Number(row.perfume_id) || 1,
+            name: row.perfume_name,
+            arabicName: row.perfume_arabic_name || row.perfume_name,
+            quantity: Number(row.quantity) || 1,
+            price: Number(row.total) / (Number(row.quantity) || 1),
+            volume: '50 ml'
+          }]
+        };
+      });
+
+      return res.json({
+        success: true,
+        count: formatted.length,
+        orders: formatted
+      });
+    }
+  } catch (err) {
+    console.warn('Notice fetching db orders in /api/orders:', err);
+  }
+
   res.json({
     success: true,
     count: serverOrders.length,

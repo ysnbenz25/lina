@@ -36,6 +36,7 @@ import {
   saveStoreSettingToSupabase,
   seedSupabaseDefaults,
 } from './lib/supabaseStore';
+import { supabase } from './lib/supabaseClient';
 
 export default function App() {
   // 1. Perfumes State (Directly and exclusively sourced from Supabase public.products)
@@ -112,7 +113,7 @@ export default function App() {
         // 3. Fetch orders
         try {
           const loadedOrders = await fetchOrdersFromSupabase();
-          if (isMounted && loadedOrders && loadedOrders.length > 0) {
+          if (isMounted && loadedOrders) {
             setOrders(loadedOrders);
           }
         } catch (orderErr) {
@@ -130,6 +131,56 @@ export default function App() {
       isMounted = false;
     };
   }, []);
+
+  // Real-time synchronization with Supabase orders table
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes-orders')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+        },
+        async () => {
+          console.log('[Supabase Realtime] Order event received, refreshing orders list...');
+          const freshOrders = await fetchOrdersFromSupabase();
+          if (freshOrders) {
+            setOrders(freshOrders);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Auto-refresh orders when entering admin console
+  useEffect(() => {
+    if (isAdminPageView) {
+      fetchOrdersFromSupabase().then((loaded) => {
+        if (loaded) setOrders(loaded);
+      }).catch((err) => {
+        console.warn('Admin view orders fetch warning:', err);
+      });
+    }
+  }, [isAdminPageView]);
+
+  const handleRefreshOrders = async () => {
+    try {
+      const refreshed = await fetchOrdersFromSupabase();
+      if (refreshed) {
+        setOrders(refreshed);
+        showToast('تم تحديث الطلبات', `تمت المزامنة الحية مع Supabase (${refreshed.length} طلب).`);
+      }
+    } catch (err: any) {
+      console.error('Error refreshing orders from Supabase:', err);
+      showToast('خطأ في التحديث', err.message || 'تعذر جلب الطلبات من Supabase');
+    }
+  };
 
   // Cart operations
   const handleAddToCart = (perfume: Perfume, quantity = 1, selectedSize?: string) => {
@@ -309,6 +360,7 @@ export default function App() {
           onResetDefaultPerfumes={handleResetDefaultPerfumes}
           orders={orders}
           onUpdateOrderStatus={handleUpdateOrderStatus}
+          onRefreshOrders={handleRefreshOrders}
           onBackToStore={() => setIsAdminPageView(false)}
           homepageSettings={homepageSettings}
           onUpdateHomepageSettings={(s) => {

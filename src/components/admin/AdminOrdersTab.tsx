@@ -18,7 +18,8 @@ import {
   AlertCircle,
   MessageCircle,
   Printer,
-  Package
+  Package,
+  RefreshCw
 } from 'lucide-react';
 import { Order, OrderStatus } from '../../types';
 
@@ -26,18 +27,31 @@ interface AdminOrdersTabProps {
   orders: Order[];
   onUpdateOrderStatus: (trackingNumber: string, status: OrderStatus) => void;
   onDeleteOrder?: (id: string) => void;
+  onRefreshOrders?: () => Promise<void> | void;
 }
 
 export const AdminOrdersTab: React.FC<AdminOrdersTabProps> = ({
   orders,
   onUpdateOrderStatus,
   onDeleteOrder,
+  onRefreshOrders,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [copiedTracking, setCopiedTracking] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleManualRefresh = async () => {
+    if (!onRefreshOrders || isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await onRefreshOrders();
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 600);
+    }
+  };
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -126,7 +140,22 @@ export const AdminOrdersTab: React.FC<AdminOrdersTabProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono text-[#D8C8B8]">
+        <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-[#D8C8B8]">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 rounded-lg text-[11px]">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Supabase مباشر</span>
+          </div>
+
+          <button
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#241B18] hover:bg-[#3d2c29] text-[#FFF9F1] border border-[#D8C8B8]/20 rounded-xl cursor-pointer transition-colors active:scale-95 disabled:opacity-50"
+            title="تحديث قائمة الطلبات من قاعدة البيانات"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-[#D6B56A] ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isRefreshing ? 'جاري التحديث...' : 'تحديث الطلبات'}</span>
+          </button>
+
           <span className="px-3 py-1.5 bg-[#241B18] rounded-xl border border-[#D8C8B8]/15">
             إجمالي: <strong className="text-[#FFF9F1]">{orders.length}</strong> طلب
           </span>
